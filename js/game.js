@@ -151,6 +151,11 @@ class Game {
                     this.player.dash(this.mouseX, this.mouseY);
                 }
 
+                // Pickup with E
+                if (e.code === 'KeyE') {
+                    this.tryPickupLoot();
+                }
+
                 if (e.code === 'Space') {
                     this.pause();
                 }
@@ -270,6 +275,25 @@ class Game {
             this.player.getWeaponType(),
             (wt) => this.selectWeaponFromInventory(wt)
         );
+    }
+
+    // Try to pick up loot when E is pressed
+    tryPickupLoot() {
+        if (!this.player.alive || this.inventoryOpen) return;
+
+        const pickedUpWeapon = this.lootBoxManager.tryPickup();
+        if (pickedUpWeapon) {
+            // Add to inventory
+            const isNew = this.player.addToInventory(pickedUpWeapon);
+            if (isNew) {
+                // New weapon - equip it
+                this.player.setWeapon(pickedUpWeapon);
+                Effects.addText(this.player.x, this.player.y - 40, 'NEW WEAPON!', '#00ff00', 1, 18);
+            } else {
+                // Already have it - just show message (weapon disappears)
+                Effects.addText(this.player.x, this.player.y - 40, 'Already in inventory', '#888', 0.8, 14);
+            }
+        }
     }
 
     pause() {
@@ -456,23 +480,11 @@ class Game {
         // Update loot boxes
         this.lootBoxManager.update(dt);
 
-        // Check for weapon pickups (adds to inventory, doesn't auto-equip if already have)
+        // Update loot box proximity for pickup indication
         if (this.player.alive) {
-            const pickedUpWeapon = this.lootBoxManager.checkPickups(
+            this.lootBoxManager.updateProximity(
                 this.player.x, this.player.y, this.player.radius
             );
-            if (pickedUpWeapon) {
-                // Add to inventory
-                const isNew = this.player.addToInventory(pickedUpWeapon);
-                if (isNew) {
-                    // New weapon - equip it
-                    this.player.setWeapon(pickedUpWeapon);
-                    Effects.addText(this.player.x, this.player.y - 40, 'NEW WEAPON!', '#00ff00', 1, 18);
-                } else {
-                    // Already have it - just show message (weapon disappears)
-                    Effects.addText(this.player.x, this.player.y - 40, 'Already in inventory', '#888', 0.8, 14);
-                }
-            }
         }
 
         // Player collision check - skip during dash (invulnerable while dashing)
