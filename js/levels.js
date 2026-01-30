@@ -283,6 +283,12 @@ class LevelManager {
         // Regular zombie spawning
         let spawnInterval = config.spawnInterval;
 
+        // Reduce zombie spawn rate by 15% for levels 5+
+        // (increasing interval by 1/0.85 ≈ 1.176 means 15% fewer spawns)
+        if (this.currentLevel >= 5) {
+            spawnInterval *= 1.176;
+        }
+
         // Final rush for level 10
         if (config.finalRush && this.timeRemaining <= 30) {
             spawnInterval /= 2;

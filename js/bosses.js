@@ -244,7 +244,7 @@ class BigBernie extends Boss {
     }
 }
 
-// Level 2 Boss: Sprint Sally - Ultra-fast circling boss
+// Level 2 Boss: Sprint Sally - Ultra-fast circling boss (15% slower)
 class SprintSally extends Boss {
     constructor(x, y) {
         super(x, y);
@@ -253,12 +253,12 @@ class SprintSally extends Boss {
         this.maxHealth = 35;
         this.radius = 25;
         this.hitRadius = 25;
-        this.speed = 300;
+        this.speed = 255; // 15% slower (was 300)
         this.color = Colors.bosses.sprintSally;
         this.points = 600;
         this.circleAngle = 0;
         this.circleRadius = 200;
-        this.circleSpeed = 3;
+        this.circleSpeed = 2.55; // 15% slower (was 3)
         // New spell: Speed Dash
         this.dashCooldown = 0;
         this.isDashing = false;
@@ -296,9 +296,9 @@ class SprintSally extends Boss {
             if (Math.random() < 0.5) {
                 this.afterImages.push({ x: this.x, y: this.y, angle: this.angle, alpha: 0.7 });
             }
-            // Dash toward player at extreme speed
-            this.x += Math.cos(this.dashAngle) * 800 * dt;
-            this.y += Math.sin(this.dashAngle) * 800 * dt;
+            // Dash toward player at extreme speed (15% slower: was 800)
+            this.x += Math.cos(this.dashAngle) * 680 * dt;
+            this.y += Math.sin(this.dashAngle) * 680 * dt;
             this.angle = this.dashAngle;
             Particles.trail(this.x, this.y, '#32CD32', 4);
 
@@ -310,8 +310,8 @@ class SprintSally extends Boss {
             return;
         }
 
-        // Circle around player
-        this.circleSpeed = 3 + this.phase;
+        // Circle around player (15% slower)
+        this.circleSpeed = 2.55 + this.phase * 0.85;
         this.circleAngle += this.circleSpeed * dt;
 
         // Spiral in occasionally

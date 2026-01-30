@@ -21,6 +21,7 @@ class LootBox {
         this.pulsePhase = 0;
         this.warningFlash = false;
         this.collected = false;
+        this.playerNearby = false; // Track if player is close enough to pick up
     }
 
     init(x, y) {
@@ -63,23 +64,35 @@ class LootBox {
         Audio.playExplosion();
     }
 
-    checkPickup(playerX, playerY, playerRadius) {
-        if (!this.active || this.collected) return null;
-
-        const dist = Utils.distance(this.x, this.y, playerX, playerY);
-        if (dist < this.pickupRadius + playerRadius) {
-            this.collected = true;
-            this.active = false;
-
-            // Pickup effects
-            Particles.deathBurst(this.x, this.y, '#FFD700', 20);
-            Effects.addText(this.x, this.y - 30, WeaponTypes[this.weaponType].name + '!', '#FFD700', 1.5, 24);
-            Audio.playWeaponPickup();
-
-            return this.weaponType;
+    // Check if player is close enough to pick up (called every frame)
+    updatePlayerProximity(playerX, playerY, playerRadius) {
+        if (!this.active || this.collected) {
+            this.playerNearby = false;
+            return;
         }
 
-        return null;
+        const dist = Utils.distance(this.x, this.y, playerX, playerY);
+        this.playerNearby = dist < this.pickupRadius + playerRadius;
+    }
+
+    // Actually pick up the item (called when E is pressed)
+    pickup() {
+        if (!this.active || this.collected || !this.playerNearby) return null;
+
+        this.collected = true;
+        this.active = false;
+
+        // Pickup effects
+        Particles.deathBurst(this.x, this.y, '#FFD700', 20);
+        Effects.addText(this.x, this.y - 30, WeaponTypes[this.weaponType].name + '!', '#FFD700', 1.5, 24);
+        Audio.playWeaponPickup();
+
+        return this.weaponType;
+    }
+
+    // Check if player can pick up (for UI indication)
+    canPickup() {
+        return this.active && !this.collected && this.playerNearby;
     }
 
     draw(ctx) {
@@ -148,6 +161,22 @@ class LootBox {
         ctx.textBaseline = 'middle';
         ctx.fillText(Math.ceil(this.lifetime).toString(), 0, -this.radius - 10);
 
+        // "Press E" indicator when player is nearby
+        if (this.playerNearby) {
+            // Weapon name above the box
+            ctx.fillStyle = '#FFD700';
+            ctx.font = 'bold 14px Arial';
+            ctx.fillText(WeaponTypes[this.weaponType].name, 0, -this.radius - 30);
+
+            // "Press E" text with pulsing effect
+            const pulseAlpha = 0.7 + Math.sin(this.pulsePhase * 2) * 0.3;
+            ctx.globalAlpha = pulseAlpha;
+            ctx.fillStyle = '#00ff00';
+            ctx.font = 'bold 16px Arial';
+            ctx.fillText('[E] Pick up', 0, this.radius + 25);
+            ctx.globalAlpha = 1;
+        }
+
         ctx.restore();
     }
 }
@@ -184,15 +213,34 @@ class LootBoxManager {
         }
     }
 
-    checkPickups(playerX, playerY, playerRadius) {
+    // Update proximity for all boxes (called every frame)
+    updateProximity(playerX, playerY, playerRadius) {
         const active = this.pool.getActive();
         for (const box of active) {
-            const weapon = box.checkPickup(playerX, playerY, playerRadius);
-            if (weapon) {
-                return weapon;
+            box.updatePlayerProximity(playerX, playerY, playerRadius);
+        }
+    }
+
+    // Try to pick up nearby loot box (called when E is pressed)
+    tryPickup() {
+        const active = this.pool.getActive();
+        for (const box of active) {
+            if (box.canPickup()) {
+                return box.pickup();
             }
         }
         return null;
+    }
+
+    // Check if any box can be picked up (for UI hints)
+    hasPickupAvailable() {
+        const active = this.pool.getActive();
+        for (const box of active) {
+            if (box.canPickup()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     draw(ctx) {
