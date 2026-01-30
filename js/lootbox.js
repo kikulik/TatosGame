@@ -1,6 +1,6 @@
 // Loot Box System for Zombie Apocalypse Game
 
-const LOOT_DROP_CHANCE = 0.01; // 1% chance to drop
+const LOOT_DROP_CHANCE = 0.03; // 3% chance to drop
 const LOOT_BOX_LIFETIME = 7; // 7 seconds before explosion
 const LOOT_BOX_RADIUS = 20;
 const LOOT_BOX_PICKUP_RADIUS = 40;

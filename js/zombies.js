@@ -367,8 +367,8 @@ class ZombieCar extends Zombie {
         this.speed = 120;
         this.radius = 30;
         this.hitRadius = 25;
-        this.health = 5;
-        this.maxHealth = 5;
+        this.health = 3;
+        this.maxHealth = 3;
         this.color = Colors.zombies.car;
         this.points = 50;
         this.zombiesInside = 3;
