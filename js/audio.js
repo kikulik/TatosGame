@@ -55,6 +55,171 @@ class AudioSystem {
         osc.stop(this.audioContext.currentTime + 0.05);
     }
 
+    // Play weapon-specific sounds
+    playWeaponSound(soundType) {
+        if (!this.enabled || !this.initialized) return;
+
+        switch (soundType) {
+            case 'pistol':
+                this.playShoot();
+                break;
+            case 'uzi':
+                this.playUziSound();
+                break;
+            case 'shotgun':
+                this.playShotgunSound();
+                break;
+            case 'rocket':
+                this.playRocketSound();
+                break;
+            case 'flame':
+                this.playFlameSound();
+                break;
+            case 'minigun':
+                this.playMinigunSound();
+                break;
+            default:
+                this.playShoot();
+        }
+    }
+
+    // Uzi sound - fast, light
+    playUziSound() {
+        if (!this.enabled || !this.initialized) return;
+
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(1200, this.audioContext.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(400, this.audioContext.currentTime + 0.03);
+
+        gain.gain.setValueAtTime(this.sfxVolume * 0.2, this.audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.03);
+
+        osc.start(this.audioContext.currentTime);
+        osc.stop(this.audioContext.currentTime + 0.03);
+    }
+
+    // Shotgun sound - loud, bass
+    playShotgunSound() {
+        if (!this.enabled || !this.initialized) return;
+
+        const osc = this.audioContext.createOscillator();
+        const noise = this.createNoise(0.15);
+        const gain = this.audioContext.createGain();
+
+        osc.connect(gain);
+        noise.connect(gain);
+        gain.connect(this.masterGain);
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(200, this.audioContext.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(50, this.audioContext.currentTime + 0.1);
+
+        gain.gain.setValueAtTime(this.sfxVolume * 0.5, this.audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.15);
+
+        osc.start(this.audioContext.currentTime);
+        osc.stop(this.audioContext.currentTime + 0.15);
+    }
+
+    // Rocket launch sound
+    playRocketSound() {
+        if (!this.enabled || !this.initialized) return;
+
+        const osc = this.audioContext.createOscillator();
+        const noise = this.createNoise(0.2);
+        const gain = this.audioContext.createGain();
+
+        osc.connect(gain);
+        noise.connect(gain);
+        gain.connect(this.masterGain);
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(100, this.audioContext.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(300, this.audioContext.currentTime + 0.1);
+        osc.frequency.exponentialRampToValueAtTime(50, this.audioContext.currentTime + 0.2);
+
+        gain.gain.setValueAtTime(this.sfxVolume * 0.4, this.audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.2);
+
+        osc.start(this.audioContext.currentTime);
+        osc.stop(this.audioContext.currentTime + 0.2);
+    }
+
+    // Flamethrower sound - continuous hiss
+    playFlameSound() {
+        if (!this.enabled || !this.initialized) return;
+
+        const noise = this.createNoise(0.05);
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+
+        osc.connect(gain);
+        noise.connect(gain);
+        gain.connect(this.masterGain);
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(150, this.audioContext.currentTime);
+
+        gain.gain.setValueAtTime(this.sfxVolume * 0.15, this.audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.05);
+
+        osc.start(this.audioContext.currentTime);
+        osc.stop(this.audioContext.currentTime + 0.05);
+    }
+
+    // Minigun sound - rapid fire
+    playMinigunSound() {
+        if (!this.enabled || !this.initialized) return;
+
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(1000, this.audioContext.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(300, this.audioContext.currentTime + 0.02);
+
+        gain.gain.setValueAtTime(this.sfxVolume * 0.15, this.audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.02);
+
+        osc.start(this.audioContext.currentTime);
+        osc.stop(this.audioContext.currentTime + 0.02);
+    }
+
+    // Weapon pickup sound
+    playWeaponPickup() {
+        if (!this.enabled || !this.initialized) return;
+
+        const notes = [392, 523.25, 659.25]; // G4, C5, E5 - power-up chord
+
+        notes.forEach((freq, i) => {
+            const startTime = this.audioContext.currentTime + i * 0.05;
+
+            const osc = this.audioContext.createOscillator();
+            const gain = this.audioContext.createGain();
+
+            osc.connect(gain);
+            gain.connect(this.masterGain);
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, startTime);
+
+            gain.gain.setValueAtTime(this.sfxVolume * 0.3, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.2);
+
+            osc.start(startTime);
+            osc.stop(startTime + 0.2);
+        });
+    }
+
     // Generate zombie death sound
     playZombieDeath() {
         if (!this.enabled || !this.initialized) return;

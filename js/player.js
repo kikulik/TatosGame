@@ -9,8 +9,8 @@ class Player {
         this.angle = 0;
         this.alive = true;
 
-        // Shooting
-        this.fireRate = 0.15; // Seconds between shots
+        // Weapon system
+        this.weapon = new Weapon('pistol');
         this.fireCooldown = 0;
         this.shooting = false;
 
@@ -45,6 +45,21 @@ class Player {
         this.knockbackX = 0;
         this.knockbackY = 0;
         this.angle = 0;
+        // Reset to pistol on level reset
+        this.weapon.setType('pistol');
+    }
+
+    setWeapon(weaponType) {
+        this.weapon.setType(weaponType);
+        this.fireCooldown = 0; // Reset cooldown to allow immediate firing
+    }
+
+    getWeaponName() {
+        return this.weapon.name;
+    }
+
+    getWeaponType() {
+        return this.weapon.type;
     }
 
     handleKeyDown(key) {
@@ -144,7 +159,7 @@ class Player {
 
         if (this.shooting && this.fireCooldown <= 0) {
             this.shoot(bulletManager);
-            this.fireCooldown = this.fireRate;
+            this.fireCooldown = this.weapon.fireRate;
         }
     }
 
@@ -153,14 +168,14 @@ class Player {
         const gunTipX = this.x + Math.cos(this.angle) * this.gunLength;
         const gunTipY = this.y + Math.sin(this.angle) * this.gunLength;
 
-        // Create bullet
-        bulletManager.spawn(gunTipX, gunTipY, this.angle);
+        // Use weapon to shoot
+        this.weapon.shoot(gunTipX, gunTipY, this.angle, bulletManager);
 
         // Muzzle flash particle
         Particles.muzzleFlash(gunTipX, gunTipY, this.angle);
 
-        // Play sound
-        Audio.playShoot();
+        // Play weapon sound
+        Audio.playWeaponSound(this.weapon.soundType);
     }
 
     die() {
@@ -194,13 +209,8 @@ class Player {
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        // Draw gun
-        ctx.fillStyle = '#333';
-        ctx.fillRect(this.radius - 5, -this.gunWidth / 2, this.gunLength - this.radius + 10, this.gunWidth);
-
-        // Gun barrel highlight
-        ctx.fillStyle = '#555';
-        ctx.fillRect(this.radius - 5, -this.gunWidth / 2, this.gunLength - this.radius + 10, this.gunWidth / 2);
+        // Draw gun based on weapon type
+        this.drawWeapon(ctx);
 
         // Draw direction indicator (eyes)
         ctx.fillStyle = '#003300';
@@ -210,5 +220,89 @@ class Player {
         ctx.fill();
 
         ctx.restore();
+
+        // Draw weapon name indicator above player
+        if (this.weapon.type !== 'pistol') {
+            ctx.save();
+            ctx.fillStyle = this.weapon.color;
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(this.weapon.name, this.x, this.y - this.radius - 10);
+            ctx.restore();
+        }
+    }
+
+    drawWeapon(ctx) {
+        const weaponType = this.weapon.type;
+
+        switch (weaponType) {
+            case 'uzi':
+                // Compact SMG
+                ctx.fillStyle = '#222';
+                ctx.fillRect(this.radius - 5, -3, 20, 6);
+                ctx.fillStyle = '#444';
+                ctx.fillRect(this.radius - 5, -3, 20, 3);
+                // Magazine
+                ctx.fillStyle = '#333';
+                ctx.fillRect(this.radius + 2, 3, 6, 8);
+                break;
+
+            case 'shotgun':
+                // Double barrel shotgun
+                ctx.fillStyle = '#4a3728';
+                ctx.fillRect(this.radius - 8, -4, 30, 8);
+                ctx.fillStyle = '#333';
+                ctx.fillRect(this.radius + 15, -3, 10, 2);
+                ctx.fillRect(this.radius + 15, 1, 10, 2);
+                break;
+
+            case 'rocketLauncher':
+                // Large launcher tube
+                ctx.fillStyle = '#3a5a3a';
+                ctx.fillRect(this.radius - 10, -6, 35, 12);
+                ctx.fillStyle = '#2a4a2a';
+                ctx.fillRect(this.radius - 10, -6, 35, 6);
+                // Sight
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(this.radius + 5, -10, 3, 4);
+                break;
+
+            case 'flamethrower':
+                // Flame tank and nozzle
+                ctx.fillStyle = '#555';
+                ctx.fillRect(this.radius - 5, -5, 25, 10);
+                // Fuel tank
+                ctx.fillStyle = '#ff6600';
+                ctx.beginPath();
+                ctx.arc(-5, 0, 10, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#cc4400';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                // Nozzle
+                ctx.fillStyle = '#333';
+                ctx.fillRect(this.radius + 15, -3, 8, 6);
+                break;
+
+            case 'doubleMinigun':
+                // Two gun barrels
+                ctx.fillStyle = '#444';
+                ctx.fillRect(this.radius - 5, -8, 28, 5);
+                ctx.fillRect(this.radius - 5, 3, 28, 5);
+                ctx.fillStyle = '#666';
+                ctx.fillRect(this.radius - 5, -8, 28, 2);
+                ctx.fillRect(this.radius - 5, 3, 28, 2);
+                // Center body
+                ctx.fillStyle = '#333';
+                ctx.fillRect(this.radius - 8, -4, 10, 8);
+                break;
+
+            default:
+                // Default pistol
+                ctx.fillStyle = '#333';
+                ctx.fillRect(this.radius - 5, -this.gunWidth / 2, this.gunLength - this.radius + 10, this.gunWidth);
+                ctx.fillStyle = '#555';
+                ctx.fillRect(this.radius - 5, -this.gunWidth / 2, this.gunLength - this.radius + 10, this.gunWidth / 2);
+        }
     }
 }

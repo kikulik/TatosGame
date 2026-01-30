@@ -181,6 +181,21 @@ const Colors = {
     bullet: '#ffff00',
     muzzleFlash: '#ff8800',
 
+    weapons: {
+        pistol: '#ffff00',
+        uzi: '#00ffff',
+        shotgun: '#ff8800',
+        rocketLauncher: '#ff0000',
+        flamethrower: '#ff4400',
+        doubleMinigun: '#ff00ff'
+    },
+
+    lootBox: {
+        normal: '#FFD700',
+        warning: '#ff0000',
+        glow: 'rgba(255, 215, 0, 0.4)'
+    },
+
     zombies: {
         walker: '#8B4513',
         runner: '#556B2F',
