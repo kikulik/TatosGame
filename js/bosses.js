@@ -130,10 +130,42 @@ class BigBernie extends Boss {
         this.points = 500;
         this.spawnCooldown = 4;
         this.lastHealth = this.health;
+        // New spell: Ground Pound
+        this.groundPoundCooldown = 0;
+        this.isGroundPounding = false;
+        this.groundPoundTimer = 0;
     }
 
     update(dt, playerX, playerY) {
         super.update(dt, playerX, playerY);
+
+        this.groundPoundCooldown -= dt;
+
+        // Ground pound ability in phase 2+
+        if (this.phase >= 2 && !this.isGroundPounding) {
+            const dist = Utils.distance(this.x, this.y, playerX, playerY);
+            if (dist < 150 && this.groundPoundCooldown <= 0) {
+                this.isGroundPounding = true;
+                this.groundPoundTimer = 0;
+                this.groundPoundCooldown = 5 - this.phase;
+            }
+        }
+
+        if (this.isGroundPounding) {
+            this.groundPoundTimer += dt;
+            if (this.groundPoundTimer > 0.5) {
+                // Execute ground pound
+                Effects.addShockwave(this.x, this.y, 200, 0.4, 'rgba(139, 69, 19, 0.6)');
+                Utils.screenShake.shake(12, 0.3);
+                Audio.playShockwave && Audio.playShockwave();
+                // Spawn walkers from the impact
+                for (let i = 0; i < this.phase; i++) {
+                    this.spawnMinion('walker');
+                }
+                this.isGroundPounding = false;
+            }
+            return; // Don't move while ground pounding
+        }
 
         // Move toward player slowly
         const angle = Utils.angle(this.x, this.y, playerX, playerY);
@@ -157,6 +189,18 @@ class BigBernie extends Boss {
         // Keep in bounds
         this.x = Utils.clamp(this.x, this.radius, GAME_WIDTH - this.radius);
         this.y = Utils.clamp(this.y, this.radius, GAME_HEIGHT - this.radius);
+    }
+
+    getShockwaveKnockback(playerX, playerY) {
+        if (this.isGroundPounding && this.groundPoundTimer > 0.4) {
+            const dist = Utils.distance(this.x, this.y, playerX, playerY);
+            if (dist < 200) {
+                const angle = Utils.angle(this.x, this.y, playerX, playerY);
+                const force = (1 - dist / 200) * 300;
+                return { angle, force };
+            }
+        }
+        return null;
     }
 
     draw(ctx) {
@@ -215,10 +259,56 @@ class SprintSally extends Boss {
         this.circleAngle = 0;
         this.circleRadius = 200;
         this.circleSpeed = 3;
+        // New spell: Speed Dash
+        this.dashCooldown = 0;
+        this.isDashing = false;
+        this.dashTimer = 0;
+        this.dashAngle = 0;
+        this.afterImages = [];
     }
 
     update(dt, playerX, playerY) {
         super.update(dt, playerX, playerY);
+
+        this.dashCooldown -= dt;
+
+        // Update afterimages
+        this.afterImages = this.afterImages.filter(img => {
+            img.alpha -= dt * 3;
+            return img.alpha > 0;
+        });
+
+        // Speed dash attack in phase 2+
+        if (this.phase >= 2 && !this.isDashing && this.dashCooldown <= 0) {
+            const dashChance = 0.02 + this.phase * 0.01;
+            if (Math.random() < dashChance) {
+                this.isDashing = true;
+                this.dashTimer = 0;
+                this.dashAngle = Utils.angle(this.x, this.y, playerX, playerY);
+                this.dashCooldown = 3 - this.phase * 0.3;
+                Effects.addText(this.x, this.y - 30, 'SPEED BURST!', '#32CD32', 0.8, 16);
+            }
+        }
+
+        if (this.isDashing) {
+            this.dashTimer += dt;
+            // Create afterimages
+            if (Math.random() < 0.5) {
+                this.afterImages.push({ x: this.x, y: this.y, angle: this.angle, alpha: 0.7 });
+            }
+            // Dash toward player at extreme speed
+            this.x += Math.cos(this.dashAngle) * 800 * dt;
+            this.y += Math.sin(this.dashAngle) * 800 * dt;
+            this.angle = this.dashAngle;
+            Particles.trail(this.x, this.y, '#32CD32', 4);
+
+            if (this.dashTimer > 0.4) {
+                this.isDashing = false;
+            }
+            this.x = Utils.clamp(this.x, this.radius, GAME_WIDTH - this.radius);
+            this.y = Utils.clamp(this.y, this.radius, GAME_HEIGHT - this.radius);
+            return;
+        }
 
         // Circle around player
         this.circleSpeed = 3 + this.phase;
@@ -252,14 +342,28 @@ class SprintSally extends Boss {
     draw(ctx) {
         if (!this.alive) return;
 
+        // Draw afterimages first
+        for (const img of this.afterImages) {
+            ctx.save();
+            ctx.globalAlpha = img.alpha * 0.5;
+            ctx.translate(img.x, img.y);
+            ctx.rotate(img.angle);
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, this.radius, this.radius * 0.7, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle);
 
-        // Speed lines
-        ctx.strokeStyle = 'rgba(50, 205, 50, 0.5)';
-        ctx.lineWidth = 2;
-        for (let i = 0; i < 3; i++) {
+        // Speed lines (more intense when dashing)
+        ctx.strokeStyle = this.isDashing ? 'rgba(50, 255, 50, 0.8)' : 'rgba(50, 205, 50, 0.5)';
+        ctx.lineWidth = this.isDashing ? 4 : 2;
+        const lineCount = this.isDashing ? 6 : 3;
+        for (let i = 0; i < lineCount; i++) {
             ctx.beginPath();
             ctx.moveTo(-this.radius - 10 - i * 10, Utils.random(-5, 5));
             ctx.lineTo(-this.radius - 30 - i * 10, Utils.random(-5, 5));
@@ -267,7 +371,7 @@ class SprintSally extends Boss {
         }
 
         // Streamlined body
-        ctx.fillStyle = this.color;
+        ctx.fillStyle = this.isDashing ? '#00ff00' : this.color;
         ctx.beginPath();
         ctx.ellipse(0, 0, this.radius, this.radius * 0.7, 0, 0, Math.PI * 2);
         ctx.fill();
@@ -287,12 +391,17 @@ class SprintSally extends Boss {
             ctx.fill();
         }
 
-        // Eyes
-        ctx.fillStyle = '#ffff00';
+        // Eyes (glow when dashing)
+        ctx.fillStyle = this.isDashing ? '#00ff00' : '#ffff00';
+        if (this.isDashing) {
+            ctx.shadowColor = '#00ff00';
+            ctx.shadowBlur = 10;
+        }
         ctx.beginPath();
         ctx.arc(10, -5, 4, 0, Math.PI * 2);
         ctx.arc(10, 5, 4, 0, Math.PI * 2);
         ctx.fill();
+        ctx.shadowBlur = 0;
 
         ctx.restore();
     }
@@ -313,12 +422,69 @@ class SkyReaper extends Boss {
         this.altitude = 60;
         this.wingPhase = 0;
         this.spawnCooldown = 3;
+        // New spell: Dive Bomb
+        this.diveBombCooldown = 0;
+        this.isDiving = false;
+        this.diveTimer = 0;
+        this.diveTargetX = 0;
+        this.diveTargetY = 0;
+        this.diveStartX = 0;
+        this.diveStartY = 0;
     }
 
     update(dt, playerX, playerY) {
         super.update(dt, playerX, playerY);
 
         this.wingPhase += dt * 5;
+        this.diveBombCooldown -= dt;
+
+        // Dive bomb attack in phase 2+
+        if (this.phase >= 2 && !this.isDiving && this.diveBombCooldown <= 0) {
+            if (Math.random() < 0.02) {
+                this.isDiving = true;
+                this.diveTimer = 0;
+                this.diveTargetX = playerX;
+                this.diveTargetY = playerY;
+                this.diveStartX = this.x;
+                this.diveStartY = this.y;
+                this.diveBombCooldown = 6 - this.phase;
+                Effects.addText(this.x, this.y - this.altitude - 20, 'DIVE BOMB!', '#ff0000', 1, 18);
+            }
+        }
+
+        if (this.isDiving) {
+            this.diveTimer += dt;
+            const diveDuration = 0.8;
+
+            if (this.diveTimer < diveDuration) {
+                // Diving down
+                const progress = this.diveTimer / diveDuration;
+                this.x = Utils.lerp(this.diveStartX, this.diveTargetX, progress);
+                this.y = Utils.lerp(this.diveStartY, this.diveTargetY, progress);
+                this.altitude = Utils.lerp(60, 10, progress);
+                Particles.trail(this.x, this.y - this.altitude, '#ff0000', 5);
+            } else if (this.diveTimer < diveDuration + 0.3) {
+                // Impact!
+                if (this.diveTimer - dt < diveDuration) {
+                    // Just landed
+                    Effects.addShockwave(this.x, this.y, 150, 0.3, 'rgba(255, 0, 0, 0.5)');
+                    Utils.screenShake.shake(10, 0.3);
+                    this.spawnMinion('flying');
+                    if (this.phase >= 3) this.spawnMinion('diveBomber');
+                }
+                this.altitude = 10;
+            } else if (this.diveTimer < diveDuration + 1.2) {
+                // Rising back up
+                const riseProgress = (this.diveTimer - diveDuration - 0.3) / 0.9;
+                this.altitude = Utils.lerp(10, 60, riseProgress);
+            } else {
+                this.isDiving = false;
+                this.altitude = 60;
+            }
+            this.x = Utils.clamp(this.x, this.radius, GAME_WIDTH - this.radius);
+            this.y = Utils.clamp(this.y, this.radius, GAME_HEIGHT - this.radius);
+            return;
+        }
 
         // Swoop pattern
         const targetDist = 250 - this.phase * 30;
@@ -348,6 +514,19 @@ class SkyReaper extends Boss {
 
         this.x = Utils.clamp(this.x, this.radius, GAME_WIDTH - this.radius);
         this.y = Utils.clamp(this.y, this.radius, GAME_HEIGHT - this.radius);
+    }
+
+    getShockwaveKnockback(playerX, playerY) {
+        // Knockback from dive bomb impact
+        if (this.isDiving && this.diveTimer > 0.8 && this.diveTimer < 1.0) {
+            const dist = Utils.distance(this.x, this.y, playerX, playerY);
+            if (dist < 150) {
+                const angle = Utils.angle(this.x, this.y, playerX, playerY);
+                const force = (1 - dist / 150) * 400;
+                return { angle, force };
+            }
+        }
+        return null;
     }
 
     draw(ctx) {

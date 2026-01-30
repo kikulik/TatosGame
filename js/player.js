@@ -14,6 +14,19 @@ class Player {
         this.fireCooldown = 0;
         this.shooting = false;
 
+        // Inventory system - weapons the player has collected
+        this.inventory = ['pistol']; // Always start with pistol
+
+        // Dash system
+        this.dashCooldown = 0;
+        this.dashMaxCooldown = 10; // 10 seconds cooldown
+        this.dashDistance = 150;
+        this.isDashing = false;
+        this.dashDuration = 0.1;
+        this.dashTimer = 0;
+        this.dashTargetX = 0;
+        this.dashTargetY = 0;
+
         // Visual
         this.color = Colors.player;
         this.gunLength = 25;
@@ -35,7 +48,7 @@ class Player {
         };
     }
 
-    reset(x, y) {
+    reset(x, y, keepInventory = false) {
         this.x = x;
         this.y = y;
         this.alive = true;
@@ -45,8 +58,70 @@ class Player {
         this.knockbackX = 0;
         this.knockbackY = 0;
         this.angle = 0;
-        // Reset to pistol on level reset
-        this.weapon.setType('pistol');
+        this.dashCooldown = 0;
+        this.isDashing = false;
+        this.dashTimer = 0;
+
+        if (!keepInventory) {
+            // Full reset - new game
+            this.inventory = ['pistol'];
+            this.weapon.setType('pistol');
+        }
+        // If keepInventory is true, keep current weapon and inventory
+    }
+
+    // Dash to mouse position
+    dash(mouseX, mouseY) {
+        if (this.dashCooldown <= 0 && !this.isDashing && this.alive) {
+            this.isDashing = true;
+            this.dashTimer = 0;
+            this.dashCooldown = this.dashMaxCooldown;
+
+            // Calculate dash direction to mouse
+            const angle = Utils.angle(this.x, this.y, mouseX, mouseY);
+            this.dashTargetX = this.x + Math.cos(angle) * this.dashDistance;
+            this.dashTargetY = this.y + Math.sin(angle) * this.dashDistance;
+
+            // Clamp to bounds
+            this.dashTargetX = Utils.clamp(this.dashTargetX, this.radius, GAME_WIDTH - this.radius);
+            this.dashTargetY = Utils.clamp(this.dashTargetY, this.radius, GAME_HEIGHT - this.radius);
+
+            // Visual effect
+            Particles.trail(this.x, this.y, '#00ffff', 10);
+            Audio.playDash && Audio.playDash();
+
+            return true;
+        }
+        return false;
+    }
+
+    getDashCooldownPercent() {
+        return Math.max(0, 1 - this.dashCooldown / this.dashMaxCooldown);
+    }
+
+    // Inventory management
+    addToInventory(weaponType) {
+        if (!this.inventory.includes(weaponType)) {
+            this.inventory.push(weaponType);
+            return true; // New weapon added
+        }
+        return false; // Already have this weapon
+    }
+
+    hasWeaponInInventory(weaponType) {
+        return this.inventory.includes(weaponType);
+    }
+
+    getInventory() {
+        return this.inventory;
+    }
+
+    equipWeaponFromInventory(weaponType) {
+        if (this.inventory.includes(weaponType)) {
+            this.setWeapon(weaponType);
+            return true;
+        }
+        return false;
     }
 
     setWeapon(weaponType) {
@@ -106,6 +181,9 @@ class Player {
 
     updateAim(mouseX, mouseY) {
         this.angle = Utils.angle(this.x, this.y, mouseX, mouseY);
+        // Store target for rocket launcher click-to-explode
+        this.targetX = mouseX;
+        this.targetY = mouseY;
     }
 
     setMouseDown(isDown) {
@@ -119,6 +197,38 @@ class Player {
 
     update(dt, bulletManager) {
         if (!this.alive) return;
+
+        // Update dash cooldown
+        if (this.dashCooldown > 0) {
+            this.dashCooldown -= dt;
+        }
+
+        // Handle dashing
+        if (this.isDashing) {
+            this.dashTimer += dt;
+            const progress = this.dashTimer / this.dashDuration;
+
+            if (progress >= 1) {
+                // Dash complete
+                this.x = this.dashTargetX;
+                this.y = this.dashTargetY;
+                this.isDashing = false;
+                Particles.deathBurst(this.x, this.y, '#00ffff', 8);
+            } else {
+                // Interpolate position
+                const startX = this.x;
+                const startY = this.y;
+                const easedProgress = progress; // linear for fast dash
+                this.x = Utils.lerp(startX, this.dashTargetX, easedProgress * 10); // Fast movement
+                this.y = Utils.lerp(startY, this.dashTargetY, easedProgress * 10);
+                Particles.trail(this.x, this.y, '#00ffff', 3);
+            }
+
+            // Keep player in bounds during dash
+            this.x = Utils.clamp(this.x, this.radius, GAME_WIDTH - this.radius);
+            this.y = Utils.clamp(this.y, this.radius, GAME_HEIGHT - this.radius);
+            return; // Skip normal movement during dash
+        }
 
         // Calculate movement direction
         let moveX = 0;
@@ -168,8 +278,8 @@ class Player {
         const gunTipX = this.x + Math.cos(this.angle) * this.gunLength;
         const gunTipY = this.y + Math.sin(this.angle) * this.gunLength;
 
-        // Use weapon to shoot
-        this.weapon.shoot(gunTipX, gunTipY, this.angle, bulletManager);
+        // Use weapon to shoot - pass target for rockets to explode at click location
+        this.weapon.shoot(gunTipX, gunTipY, this.angle, bulletManager, this.targetX, this.targetY);
 
         // Muzzle flash particle
         Particles.muzzleFlash(gunTipX, gunTipY, this.angle);

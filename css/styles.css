@@ -287,6 +287,198 @@ body {
     animation: shake 0.3s ease-in-out;
 }
 
+/* Player Name Input */
+.player-name-input {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.player-name-input label {
+    color: #888;
+    font-size: 0.9em;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+}
+
+.player-name-input input {
+    background: #222;
+    border: 2px solid #ff4444;
+    color: #fff;
+    padding: 10px 20px;
+    font-size: 1.2em;
+    text-align: center;
+    border-radius: 5px;
+    outline: none;
+    width: 200px;
+}
+
+.player-name-input input:focus {
+    box-shadow: 0 0 15px rgba(255, 68, 68, 0.5);
+}
+
+/* High Scores */
+#high-scores-list {
+    max-height: 400px;
+    overflow-y: auto;
+    margin: 20px 0;
+    padding: 10px;
+    background: rgba(255, 68, 68, 0.1);
+    border-radius: 5px;
+    min-width: 350px;
+}
+
+.high-score-entry {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 15px;
+    margin: 5px 0;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 5px;
+    color: #ccc;
+}
+
+.high-score-entry.top-3 {
+    background: rgba(255, 215, 0, 0.2);
+    color: #FFD700;
+}
+
+.high-score-rank {
+    font-weight: bold;
+    min-width: 30px;
+}
+
+.high-score-name {
+    flex: 1;
+    margin: 0 15px;
+}
+
+.high-score-score {
+    color: #ff4444;
+    font-weight: bold;
+}
+
+/* Dash Cooldown */
+#dash-cooldown-container {
+    position: absolute;
+    bottom: 30px;
+    left: 30px;
+    text-align: center;
+}
+
+#dash-cooldown-bar {
+    width: 80px;
+    height: 10px;
+    background: #333;
+    border: 2px solid #00aaff;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+#dash-cooldown-fill {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #00aaff 0%, #00ffff 100%);
+    transition: width 0.1s linear;
+}
+
+#dash-label {
+    color: #00aaff;
+    font-size: 0.8em;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+/* Player Name Display */
+#player-name-display {
+    position: absolute;
+    top: 70px;
+    left: 20px;
+    color: #00ff00;
+    font-size: 1em;
+    font-weight: bold;
+    text-shadow: 0 0 10px #00ff00;
+}
+
+/* Inventory Panel */
+#inventory-panel {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.95);
+    padding: 30px;
+    border-radius: 10px;
+    border: 2px solid #ff4444;
+    box-shadow: 0 0 30px rgba(255, 68, 68, 0.5);
+    z-index: 150;
+    min-width: 400px;
+}
+
+#inventory-panel h3 {
+    color: #ff4444;
+    font-size: 1.5em;
+    text-align: center;
+    margin-bottom: 10px;
+    letter-spacing: 3px;
+}
+
+.inventory-hint {
+    color: #888;
+    font-size: 0.9em;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#inventory-weapons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.inventory-weapon {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px;
+    background: #222;
+    border: 2px solid #444;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.inventory-weapon:hover {
+    border-color: #ff4444;
+    background: #333;
+}
+
+.inventory-weapon.equipped {
+    border-color: #00ff00;
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+}
+
+.weapon-name {
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.weapon-stats {
+    color: #888;
+    font-size: 0.9em;
+}
+
+.weapon-equipped-badge {
+    background: #00ff00;
+    color: #000;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
 /* Mobile Warning */
 @media (max-width: 768px) {
     .menu h1 {

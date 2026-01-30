@@ -13,6 +13,8 @@ class UIManager {
             gameOver: document.getElementById('game-over'),
             levelComplete: document.getElementById('level-complete'),
             victoryScreen: document.getElementById('victory-screen'),
+            highScoresMenu: document.getElementById('high-scores-menu'),
+            inventoryPanel: document.getElementById('inventory-panel'),
 
             // HUD
             hud: document.getElementById('hud'),
@@ -48,7 +50,15 @@ class UIManager {
 
             // Victory stats
             vKills: document.getElementById('v-kills'),
-            vScore: document.getElementById('v-score')
+            vScore: document.getElementById('v-score'),
+
+            // New elements
+            playerNameInput: document.getElementById('player-name'),
+            highScoresList: document.getElementById('high-scores-list'),
+            inventoryWeapons: document.getElementById('inventory-weapons'),
+            dashCooldownFill: document.getElementById('dash-cooldown-fill'),
+            dashLabel: document.getElementById('dash-label'),
+            playerNameDisplay: document.getElementById('player-name-display')
         };
 
         // Buttons
@@ -66,31 +76,176 @@ class UIManager {
             goMenu: document.getElementById('go-menu-btn'),
             nextLevel: document.getElementById('next-level-btn'),
             playAgain: document.getElementById('play-again-btn'),
-            vMenu: document.getElementById('v-menu-btn')
+            vMenu: document.getElementById('v-menu-btn'),
+            highScores: document.getElementById('high-scores-btn'),
+            highScoresBack: document.getElementById('high-scores-back-btn'),
+            closeInventory: document.getElementById('close-inventory-btn')
         };
 
         this.currentScreen = 'mainMenu';
         this.callbacks = {};
+        this.inventoryOpen = false;
     }
 
     init(callbacks) {
         this.callbacks = callbacks;
         this.setupEventListeners();
         this.createLevelButtons();
+        this.loadPlayerName();
+    }
+
+    // Player name management
+    loadPlayerName() {
+        const savedName = localStorage.getItem('zombieApocalypse_playerName');
+        if (savedName && this.elements.playerNameInput) {
+            this.elements.playerNameInput.value = savedName;
+        }
+    }
+
+    savePlayerName() {
+        const name = this.getPlayerName();
+        if (name) {
+            localStorage.setItem('zombieApocalypse_playerName', name);
+        }
+    }
+
+    getPlayerName() {
+        return this.elements.playerNameInput?.value?.trim() || 'Anonymous';
+    }
+
+    updatePlayerNameDisplay(name) {
+        if (this.elements.playerNameDisplay) {
+            this.elements.playerNameDisplay.textContent = name;
+        }
+    }
+
+    // High scores management
+    getHighScores() {
+        const scores = localStorage.getItem('zombieApocalypse_highScores');
+        return scores ? JSON.parse(scores) : [];
+    }
+
+    saveHighScore(name, score, level) {
+        const scores = this.getHighScores();
+        scores.push({ name, score, level, date: Date.now() });
+        scores.sort((a, b) => b.score - a.score);
+        const topScores = scores.slice(0, 20); // Keep top 20
+        localStorage.setItem('zombieApocalypse_highScores', JSON.stringify(topScores));
+    }
+
+    displayHighScores() {
+        const scores = this.getHighScores();
+        const container = this.elements.highScoresList;
+        if (!container) return;
+
+        if (scores.length === 0) {
+            container.innerHTML = '<p style="color: #888; text-align: center;">No high scores yet!</p>';
+            return;
+        }
+
+        container.innerHTML = scores.map((score, index) => `
+            <div class="high-score-entry ${index < 3 ? 'top-3' : ''}">
+                <span class="high-score-rank">#${index + 1}</span>
+                <span class="high-score-name">${this.escapeHtml(score.name)}</span>
+                <span class="high-score-score">${score.score.toLocaleString()}</span>
+            </div>
+        `).join('');
+    }
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Dash cooldown display
+    updateDashCooldown(percent) {
+        if (this.elements.dashCooldownFill) {
+            this.elements.dashCooldownFill.style.width = `${percent * 100}%`;
+        }
+        if (this.elements.dashLabel) {
+            if (percent >= 1) {
+                this.elements.dashLabel.style.color = '#00ffff';
+                this.elements.dashLabel.textContent = 'DASH [Q] READY';
+            } else {
+                this.elements.dashLabel.style.color = '#888';
+                this.elements.dashLabel.textContent = 'DASH [Q]';
+            }
+        }
+    }
+
+    // Inventory panel
+    showInventory(inventory, currentWeapon, onSelectWeapon) {
+        this.inventoryOpen = true;
+        const container = this.elements.inventoryWeapons;
+        if (!container) return;
+
+        container.innerHTML = inventory.map(weaponType => {
+            const weapon = WeaponTypes[weaponType];
+            const isEquipped = weaponType === currentWeapon;
+            return `
+                <div class="inventory-weapon ${isEquipped ? 'equipped' : ''}"
+                     data-weapon="${weaponType}"
+                     style="border-left: 4px solid ${weapon.color}">
+                    <div>
+                        <span class="weapon-name" style="color: ${weapon.color}">${weapon.name}</span>
+                        <div class="weapon-stats">DMG: ${weapon.damage} | Rate: ${(1/weapon.fireRate).toFixed(1)}/s</div>
+                    </div>
+                    ${isEquipped ? '<span class="weapon-equipped-badge">EQUIPPED</span>' : ''}
+                </div>
+            `;
+        }).join('');
+
+        // Add click handlers
+        container.querySelectorAll('.inventory-weapon').forEach(el => {
+            el.addEventListener('click', () => {
+                const weaponType = el.dataset.weapon;
+                if (onSelectWeapon) onSelectWeapon(weaponType);
+            });
+        });
+
+        this.elements.inventoryPanel?.classList.remove('hidden');
+    }
+
+    hideInventory() {
+        this.inventoryOpen = false;
+        this.elements.inventoryPanel?.classList.add('hidden');
+    }
+
+    isInventoryOpen() {
+        return this.inventoryOpen;
     }
 
     setupEventListeners() {
         // Main menu
         this.buttons.start.addEventListener('click', () => {
+            this.savePlayerName();
             this.callbacks.onStartGame && this.callbacks.onStartGame();
         });
 
         this.buttons.levelSelect.addEventListener('click', () => {
+            this.savePlayerName();
             this.showScreen('levelSelectMenu');
         });
 
         this.buttons.controls.addEventListener('click', () => {
             this.showScreen('controlsMenu');
+        });
+
+        // High scores
+        this.buttons.highScores?.addEventListener('click', () => {
+            this.displayHighScores();
+            this.showScreen('highScoresMenu');
+        });
+
+        this.buttons.highScoresBack?.addEventListener('click', () => {
+            this.showScreen('mainMenu');
+        });
+
+        // Inventory
+        this.buttons.closeInventory?.addEventListener('click', () => {
+            this.hideInventory();
+            this.callbacks.onCloseInventory && this.callbacks.onCloseInventory();
         });
 
         // Level select
