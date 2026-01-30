@@ -9,7 +9,7 @@ const LevelConfig = {
             { type: 'walker', weight: 100 }
         ],
         spawnInterval: 3.0,
-        bossSpawnTime: 150, // Boss spawns at 30 seconds remaining
+        bossSpawnTime: 50, // Boss spawns at 30 seconds remaining
         description: [
             'Basic Walkers - Slow, predictable movement',
             'Boss: Big Bernie - Large zombie that spawns smaller ones'
@@ -25,7 +25,7 @@ const LevelConfig = {
             { type: 'runner', weight: 40 }
         ],
         spawnInterval: 2.5,
-        bossSpawnTime: 150,
+        bossSpawnTime: 50,
         description: [
             'Basic Walkers (60%)',
             'Runners (40%) - Fast zigzag movement',
@@ -43,7 +43,7 @@ const LevelConfig = {
             { type: 'flying', weight: 30 }
         ],
         spawnInterval: 2.0,
-        bossSpawnTime: 150,
+        bossSpawnTime: 50,
         description: [
             'Basic Walkers (40%)',
             'Runners (30%)',
@@ -63,7 +63,7 @@ const LevelConfig = {
             { type: 'berserker', weight: 30 }
         ],
         spawnInterval: 1.8,
-        bossSpawnTime: 150,
+        bossSpawnTime: 50,
         description: [
             'Basic Walkers (30%)',
             'Runners (20%)',
@@ -85,7 +85,7 @@ const LevelConfig = {
             { type: 'jumper', weight: 25 }
         ],
         spawnInterval: 1.5,
-        bossSpawnTime: 150,
+        bossSpawnTime: 50,
         description: [
             'Mixed ground zombies (50%)',
             'Zombie Cars (25%) - Release zombies on death',
@@ -107,7 +107,7 @@ const LevelConfig = {
             { type: 'diveBomber', weight: 20 }
         ],
         spawnInterval: 1.3,
-        bossSpawnTime: 150,
+        bossSpawnTime: 50,
         description: [
             'Mixed ground zombies (40%)',
             'Flying Zombies (20%)',
@@ -131,7 +131,7 @@ const LevelConfig = {
         ],
         spawnInterval: 0.6, // Spawns 2 every 1.2 seconds
         spawnCount: 2,
-        bossSpawnTime: 150,
+        bossSpawnTime: 50,
         enableSwarms: true,
         description: [
             'All zombie types in random combinations',
@@ -154,7 +154,7 @@ const LevelConfig = {
             { type: 'shielded', weight: 15 }
         ],
         spawnInterval: 1.0,
-        bossSpawnTime: 150,
+        bossSpawnTime: 50,
         description: [
             'Tank Zombies (20%) - Heavy armor',
             'Teleporters (15%) - Blink movement',
@@ -181,7 +181,7 @@ const LevelConfig = {
         spawnInterval: 0.4, // 2-3 every 0.8-1.2 seconds
         spawnCount: 2,
         enableCloseSpawns: true,
-        bossSpawnTime: 150,
+        bossSpawnTime: 50,
         description: [
             'ALL zombie types randomly mixed',
             'Random spawn points around arena',
@@ -212,7 +212,7 @@ const LevelConfig = {
         enableCloseSpawns: true,
         enableSwarms: true,
         finalRush: true, // Double spawn rate in final 30 seconds
-        bossSpawnTime: 150,
+        bossSpawnTime: 50,
         description: [
             'EVERY zombie type simultaneously',
             'Multiple vehicles and helicopters',
@@ -291,7 +291,10 @@ class LevelManager {
         if (this.spawnTimer >= spawnInterval && this.timeRemaining > 0) {
             this.spawnTimer = 0;
 
-            const spawnCount = config.spawnCount || 1;
+            // 3x spawn rate before boss, 1x after boss spawns
+            const baseSpawnCount = config.spawnCount || 1;
+            const spawnMultiplier = this.bossSpawned ? 1 : 3;
+            const spawnCount = baseSpawnCount * spawnMultiplier;
 
             for (let i = 0; i < spawnCount; i++) {
                 const zombieType = this.selectZombieType(config.zombieTypes);

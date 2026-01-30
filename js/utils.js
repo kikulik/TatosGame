@@ -1,9 +1,9 @@
 // Utility Functions for Zombie Apocalypse Game
 
-// Constants
-const GAME_WIDTH = 1280;
-const GAME_HEIGHT = 720;
-const LEVEL_DURATION = 180; // 3 minutes in seconds
+// Constants - dynamic based on window size
+let GAME_WIDTH = window.innerWidth;
+let GAME_HEIGHT = window.innerHeight;
+const LEVEL_DURATION = 60; // 1 minute in seconds
 
 // Math Utilities
 const Utils = {
