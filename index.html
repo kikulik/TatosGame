@@ -14,12 +14,24 @@
         <div id="main-menu" class="menu">
             <h1>ZOMBIE APOCALYPSE</h1>
             <p class="subtitle">10 Levels of Survival</p>
+            <div class="player-name-input">
+                <label for="player-name">PLAYER NAME</label>
+                <input type="text" id="player-name" maxlength="15" placeholder="Enter your name">
+            </div>
             <button id="start-btn" class="menu-btn">START GAME</button>
             <button id="level-select-btn" class="menu-btn">LEVEL SELECT</button>
+            <button id="high-scores-btn" class="menu-btn">HIGH SCORES</button>
             <button id="controls-btn" class="menu-btn">CONTROLS</button>
             <div class="credits-footer">
                 <p>Use headphones for best experience</p>
             </div>
+        </div>
+
+        <!-- High Scores Menu -->
+        <div id="high-scores-menu" class="menu hidden">
+            <h2>HIGH SCORES</h2>
+            <div id="high-scores-list"></div>
+            <button id="high-scores-back-btn" class="menu-btn">BACK</button>
         </div>
 
         <!-- Level Select Menu -->
@@ -36,6 +48,8 @@
                 <p><span class="key">WASD</span> or <span class="key">Arrow Keys</span> - Move</p>
                 <p><span class="key">Mouse</span> - Aim</p>
                 <p><span class="key">Left Click</span> - Shoot</p>
+                <p><span class="key">Q</span> - Dash (10s cooldown)</p>
+                <p><span class="key">I</span> - Open Inventory</p>
                 <p><span class="key">Space</span> - Pause</p>
                 <p><span class="key">R</span> - Restart Level</p>
             </div>
@@ -126,6 +140,23 @@
                     <div id="boss-health-fill"></div>
                 </div>
             </div>
+            <!-- Dash Cooldown Indicator -->
+            <div id="dash-cooldown-container">
+                <div id="dash-cooldown-bar">
+                    <div id="dash-cooldown-fill"></div>
+                </div>
+                <span id="dash-label">DASH [Q]</span>
+            </div>
+            <!-- Player Name Display -->
+            <div id="player-name-display"></div>
+        </div>
+
+        <!-- Inventory Panel -->
+        <div id="inventory-panel" class="hidden">
+            <h3>INVENTORY</h3>
+            <p class="inventory-hint">Click a weapon to equip it. Press I to close.</p>
+            <div id="inventory-weapons"></div>
+            <button id="close-inventory-btn" class="menu-btn">CLOSE [I]</button>
         </div>
     </div>
 

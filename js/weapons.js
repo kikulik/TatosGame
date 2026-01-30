@@ -20,7 +20,7 @@ const WeaponTypes = {
     uzi: {
         name: 'Uzi',
         fireRate: 0.05,
-        damage: 1,
+        damage: 0.5, // Half damage of normal gun
         speed: 900,
         bulletSize: 3,
         spread: 0.15,
@@ -123,7 +123,7 @@ class Weapon {
         this.dualOffset = config.dualOffset || 0;
     }
 
-    shoot(x, y, angle, bulletManager) {
+    shoot(x, y, angle, bulletManager, targetX = null, targetY = null) {
         const bullets = [];
 
         if (this.type === 'doubleMinigun') {
@@ -155,10 +155,36 @@ class Weapon {
         } else {
             // Single bullet with optional spread
             const spreadAngle = angle + Utils.random(-this.spread, this.spread);
-            bullets.push(bulletManager.spawnWeaponBullet(x, y, spreadAngle, this));
+            // For rockets, pass target coordinates so they explode at click location
+            if (this.isExplosive && targetX !== null && targetY !== null) {
+                bullets.push(bulletManager.spawnWeaponBullet(x, y, spreadAngle, this, targetX, targetY));
+            } else {
+                bullets.push(bulletManager.spawnWeaponBullet(x, y, spreadAngle, this));
+            }
         }
 
         return bullets;
+    }
+
+    getData() {
+        return {
+            type: this.type,
+            name: this.name,
+            fireRate: this.fireRate,
+            damage: this.damage,
+            speed: this.speed,
+            bulletSize: this.bulletSize,
+            spread: this.spread,
+            bulletsPerShot: this.bulletsPerShot,
+            color: this.color,
+            trailColor: this.trailColor,
+            isExplosive: this.isExplosive,
+            explosionRadius: this.explosionRadius,
+            isFlame: this.isFlame,
+            range: this.range,
+            soundType: this.soundType,
+            dualOffset: this.dualOffset
+        };
     }
 }
 

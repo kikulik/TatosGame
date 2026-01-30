@@ -25,6 +25,8 @@ class Bullet {
         this.startX = 0;
         this.startY = 0;
         this.weaponType = 'pistol';
+        this.targetX = null; // For click-to-detonate rockets
+        this.targetY = null;
     }
 
     init(x, y, angle) {
@@ -39,7 +41,7 @@ class Bullet {
         this.distanceTraveled = 0;
     }
 
-    initFromWeapon(x, y, angle, weapon) {
+    initFromWeapon(x, y, angle, weapon, targetX = null, targetY = null) {
         this.x = x;
         this.y = y;
         this.startX = x;
@@ -59,6 +61,9 @@ class Bullet {
         this.range = weapon.range;
         this.distanceTraveled = 0;
         this.weaponType = weapon.type;
+        // For rockets - they explode where you clicked
+        this.targetX = targetX;
+        this.targetY = targetY;
     }
 
     update(dt) {
@@ -72,6 +77,17 @@ class Bullet {
 
         // Track distance traveled
         this.distanceTraveled += Utils.distance(prevX, prevY, this.x, this.y);
+
+        // For rockets with target - explode when reaching target area
+        if (this.isExplosive && this.targetX !== null && this.targetY !== null) {
+            const distToTarget = Utils.distance(this.x, this.y, this.targetX, this.targetY);
+            if (distToTarget < 20) {
+                // Reached target - explode!
+                this.explode();
+                this.active = false;
+                return;
+            }
+        }
 
         // Deactivate if past range (for shotgun, flamethrower)
         if (this.distanceTraveled > this.range) {
@@ -208,9 +224,9 @@ class BulletManager {
         return bullet;
     }
 
-    spawnWeaponBullet(x, y, angle, weapon) {
+    spawnWeaponBullet(x, y, angle, weapon, targetX = null, targetY = null) {
         const bullet = this.pool.get();
-        bullet.initFromWeapon(x, y, angle, weapon);
+        bullet.initFromWeapon(x, y, angle, weapon, targetX, targetY);
         return bullet;
     }
 

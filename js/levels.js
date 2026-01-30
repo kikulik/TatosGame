@@ -78,11 +78,11 @@ const LevelConfig = {
         name: 'Vehicle Mayhem',
         theme: 'Zombies in vehicles',
         zombieTypes: [
-            { type: 'walker', weight: 25 },
-            { type: 'runner', weight: 15 },
-            { type: 'flying', weight: 10 },
-            { type: 'car', weight: 25 },
-            { type: 'jumper', weight: 25 }
+            { type: 'walker', weight: 30 },
+            { type: 'runner', weight: 25 },
+            { type: 'flying', weight: 15 },
+            { type: 'car', weight: 8 }, // Reduced from 25 - cars are now rare
+            { type: 'jumper', weight: 22 }
         ],
         spawnInterval: 1.5,
         bossSpawnTime: 50,
@@ -195,17 +195,17 @@ const LevelConfig = {
         name: 'Apocalypse',
         theme: 'The ultimate survival test',
         zombieTypes: [
-            { type: 'walker', weight: 8 },
-            { type: 'runner', weight: 10 },
-            { type: 'flying', weight: 10 },
-            { type: 'berserker', weight: 12 },
-            { type: 'car', weight: 8 },
-            { type: 'jumper', weight: 10 },
+            { type: 'walker', weight: 10 },
+            { type: 'runner', weight: 12 },
+            { type: 'flying', weight: 12 },
+            { type: 'berserker', weight: 14 },
+            { type: 'car', weight: 3 }, // Reduced - cars are rare
+            { type: 'jumper', weight: 12 },
             { type: 'helicopter', weight: 8 },
             { type: 'diveBomber', weight: 10 },
-            { type: 'tank', weight: 8 },
-            { type: 'teleporter', weight: 8 },
-            { type: 'shielded', weight: 8 }
+            { type: 'tank', weight: 7 },
+            { type: 'teleporter', weight: 6 },
+            { type: 'shielded', weight: 6 }
         ],
         spawnInterval: 0.15, // 3-4 every 0.5 seconds
         spawnCount: 3,

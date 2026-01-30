@@ -36,6 +36,17 @@ class Game {
         this.mouseX = GAME_WIDTH / 2;
         this.mouseY = GAME_HEIGHT / 2;
 
+        // Player name
+        this.playerName = 'Anonymous';
+
+        // Boss kill animation
+        this.bossKillAnimationTimer = 0;
+        this.bossKillAnimationDuration = 2; // 2 seconds of animation
+        this.showingBossKillAnimation = false;
+
+        // Inventory state
+        this.inventoryOpen = false;
+
         // Initialize
         this.init();
     }
@@ -63,7 +74,8 @@ class Game {
             onResume: () => this.resume(),
             onRestart: () => this.restartLevel(),
             onQuit: () => this.quitToMenu(),
-            onNextLevel: () => this.nextLevel()
+            onNextLevel: () => this.nextLevel(),
+            onCloseInventory: () => this.closeInventory()
         });
 
         // Initialize audio
@@ -118,7 +130,26 @@ class Game {
         // Keyboard
         document.addEventListener('keydown', (e) => {
             if (this.state === 'playing') {
+                // Handle inventory
+                if (e.code === 'KeyI') {
+                    this.toggleInventory();
+                    return;
+                }
+
+                // Skip other inputs if inventory is open
+                if (this.inventoryOpen) {
+                    if (e.code === 'Escape') {
+                        this.closeInventory();
+                    }
+                    return;
+                }
+
                 this.player.handleKeyDown(e.code);
+
+                // Dash with Q
+                if (e.code === 'KeyQ') {
+                    this.player.dash(this.mouseX, this.mouseY);
+                }
 
                 if (e.code === 'Space') {
                     this.pause();
@@ -148,7 +179,10 @@ class Game {
     startGame() {
         this.totalKills = 0;
         this.totalScore = 0;
+        this.playerName = UI.getPlayerName();
         this.levelManager.setLevel(1);
+        // Full reset - no inventory preservation
+        this.player.reset(GAME_WIDTH / 2, GAME_HEIGHT / 2, false);
         this.showLevelIntro();
     }
 
@@ -168,16 +202,17 @@ class Game {
     }
 
     beginLevel() {
-        this.resetLevel();
+        this.resetLevel(true); // Keep inventory when beginning level
         this.state = 'playing';
         UI.hideAllMenus();
         UI.showHUD();
+        UI.updatePlayerNameDisplay(this.playerName);
         Audio.startMusic(this.levelManager.currentLevel);
     }
 
-    resetLevel() {
-        // Reset player
-        this.player.reset(GAME_WIDTH / 2, GAME_HEIGHT / 2);
+    resetLevel(keepInventory = false) {
+        // Reset player (keep inventory if advancing to next level)
+        this.player.reset(GAME_WIDTH / 2, GAME_HEIGHT / 2, keepInventory);
 
         // Clear game objects
         this.bulletManager.clear();
@@ -197,6 +232,44 @@ class Game {
         this.bestCombo = 1;
         this.comboTimer = 0;
         this.timeSurvived = 0;
+
+        // Reset boss kill animation
+        this.showingBossKillAnimation = false;
+        this.bossKillAnimationTimer = 0;
+    }
+
+    // Inventory methods
+    toggleInventory() {
+        if (this.inventoryOpen) {
+            this.closeInventory();
+        } else {
+            this.openInventory();
+        }
+    }
+
+    openInventory() {
+        this.inventoryOpen = true;
+        this.player.shooting = false; // Stop shooting
+        UI.showInventory(
+            this.player.getInventory(),
+            this.player.getWeaponType(),
+            (weaponType) => this.selectWeaponFromInventory(weaponType)
+        );
+    }
+
+    closeInventory() {
+        this.inventoryOpen = false;
+        UI.hideInventory();
+    }
+
+    selectWeaponFromInventory(weaponType) {
+        this.player.equipWeaponFromInventory(weaponType);
+        // Refresh inventory display
+        UI.showInventory(
+            this.player.getInventory(),
+            this.player.getWeaponType(),
+            (wt) => this.selectWeaponFromInventory(wt)
+        );
     }
 
     pause() {
@@ -216,10 +289,11 @@ class Game {
     }
 
     restartLevel() {
-        this.resetLevel();
+        this.resetLevel(false); // Full reset on restart
         this.state = 'playing';
         UI.hideAllMenus();
         UI.showHUD();
+        UI.updatePlayerNameDisplay(this.playerName);
         Audio.startMusic(this.levelManager.currentLevel);
     }
 
@@ -241,9 +315,12 @@ class Game {
             this.state = 'victory';
             UI.hideHUD();
             UI.showVictory(this.totalKills, this.totalScore);
+            // Save high score on victory
+            UI.saveHighScore(this.playerName, this.totalScore, this.levelManager.currentLevel);
             Audio.playLevelComplete();
         } else {
             this.levelManager.nextLevel();
+            // Inventory is preserved through beginLevel
             this.showLevelIntro();
         }
     }
@@ -252,6 +329,9 @@ class Game {
         this.state = 'gameOver';
         UI.hideHUD();
         UI.hideBossHealth();
+        // Save high score on game over
+        const finalScore = this.totalScore + this.score;
+        UI.saveHighScore(this.playerName, finalScore, this.levelManager.currentLevel);
         UI.showGameOver(
             this.levelManager.currentLevel,
             this.kills,
@@ -300,6 +380,30 @@ class Game {
     update(dt) {
         if (this.state !== 'playing') return;
 
+        // Skip game updates if inventory is open (but still update visuals)
+        if (this.inventoryOpen) {
+            Particles.update(dt);
+            Effects.update(dt);
+            return;
+        }
+
+        // Handle boss kill animation
+        if (this.showingBossKillAnimation) {
+            this.bossKillAnimationTimer += dt;
+
+            // Continue showing particles during animation
+            Particles.update(dt);
+            Effects.update(dt);
+            Utils.screenShake.update(dt);
+
+            // When animation completes, show level complete
+            if (this.bossKillAnimationTimer >= this.bossKillAnimationDuration) {
+                this.showingBossKillAnimation = false;
+                this.levelComplete();
+            }
+            return;
+        }
+
         this.timeSurvived += dt;
 
         // Update combo timer
@@ -311,6 +415,9 @@ class Game {
         // Update player
         this.player.updateAim(this.mouseX, this.mouseY);
         this.player.update(dt, this.bulletManager);
+
+        // Update dash cooldown UI
+        UI.updateDashCooldown(this.player.getDashCooldownPercent());
 
         // Update bullets
         this.bulletManager.update(dt);
@@ -341,23 +448,35 @@ class Game {
             this.addScore(bossResult.points, this.player.x, this.player.y - 50);
             Effects.addText(GAME_WIDTH / 2, GAME_HEIGHT / 2, `${bossResult.name} DEFEATED!`, '#FFD700', 2, 36);
             UI.hideBossHealth();
+
+            // Start boss kill animation
+            this.startBossKillAnimation(bossResult);
         }
 
         // Update loot boxes
         this.lootBoxManager.update(dt);
 
-        // Check for weapon pickups
+        // Check for weapon pickups (adds to inventory, doesn't auto-equip if already have)
         if (this.player.alive) {
             const pickedUpWeapon = this.lootBoxManager.checkPickups(
                 this.player.x, this.player.y, this.player.radius
             );
             if (pickedUpWeapon) {
-                this.player.setWeapon(pickedUpWeapon);
+                // Add to inventory
+                const isNew = this.player.addToInventory(pickedUpWeapon);
+                if (isNew) {
+                    // New weapon - equip it
+                    this.player.setWeapon(pickedUpWeapon);
+                    Effects.addText(this.player.x, this.player.y - 40, 'NEW WEAPON!', '#00ff00', 1, 18);
+                } else {
+                    // Already have it - just show message (weapon disappears)
+                    Effects.addText(this.player.x, this.player.y - 40, 'Already in inventory', '#888', 0.8, 14);
+                }
             }
         }
 
-        // Check player-zombie collisions
-        if (this.player.alive) {
+        // Player collision check - skip during dash (invulnerable while dashing)
+        if (this.player.alive && !this.player.isDashing) {
             if (this.zombieManager.checkPlayerCollision(this.player.x, this.player.y, this.player.radius)) {
                 this.player.die();
                 setTimeout(() => this.gameOver(), 1000);
@@ -394,6 +513,27 @@ class Game {
         if (boss && boss.alive) {
             UI.showBossHealth(boss.name, boss.health / boss.maxHealth);
         }
+    }
+
+    startBossKillAnimation(bossResult) {
+        this.showingBossKillAnimation = true;
+        this.bossKillAnimationTimer = 0;
+
+        // Epic boss kill effects
+        Utils.screenShake.shake(30, 1.5);
+        Effects.addFlash(0.5, 'rgba(255, 215, 0, 0.4)');
+
+        // Multiple explosion waves
+        for (let i = 0; i < 5; i++) {
+            setTimeout(() => {
+                const offsetX = Utils.random(-100, 100);
+                const offsetY = Utils.random(-100, 100);
+                Particles.explosion(GAME_WIDTH / 2 + offsetX, GAME_HEIGHT / 2 + offsetY, 40, 2);
+                Effects.addShockwave(GAME_WIDTH / 2 + offsetX, GAME_HEIGHT / 2 + offsetY, 150, 0.4, 'rgba(255, 68, 68, 0.5)');
+            }, i * 300);
+        }
+
+        Audio.playBossDeath && Audio.playBossDeath();
     }
 
     draw() {
