@@ -1,0 +1,310 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #1a1a1a;
+    overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    cursor: crosshair;
+}
+
+#game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#gameCanvas {
+    background-color: #2d2d2d;
+    display: block;
+}
+
+/* Menu Styles */
+.menu {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.9);
+    padding: 40px;
+    border-radius: 10px;
+    border: 2px solid #ff4444;
+    box-shadow: 0 0 30px rgba(255, 68, 68, 0.5);
+    z-index: 100;
+}
+
+.menu h1 {
+    color: #ff4444;
+    font-size: 3em;
+    text-shadow: 0 0 20px #ff4444;
+    margin-bottom: 10px;
+    letter-spacing: 5px;
+}
+
+.menu h2 {
+    color: #ff4444;
+    font-size: 2em;
+    text-shadow: 0 0 15px #ff4444;
+    margin-bottom: 20px;
+}
+
+.menu .subtitle {
+    color: #888;
+    font-size: 1.2em;
+    margin-bottom: 30px;
+}
+
+.menu-btn {
+    background: linear-gradient(180deg, #ff4444 0%, #cc0000 100%);
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    font-size: 1.2em;
+    font-weight: bold;
+    margin: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: all 0.2s ease;
+    min-width: 200px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.menu-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255, 68, 68, 0.7);
+}
+
+.menu-btn:active {
+    transform: scale(0.98);
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Controls Menu */
+.controls-list {
+    text-align: left;
+    margin: 20px 0;
+}
+
+.controls-list p {
+    color: #ccc;
+    margin: 10px 0;
+    font-size: 1.1em;
+}
+
+.key {
+    background: #333;
+    padding: 5px 10px;
+    border-radius: 4px;
+    color: #ff4444;
+    font-family: monospace;
+}
+
+/* Level Select */
+#level-buttons {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin: 20px 0;
+    max-width: 500px;
+}
+
+.level-btn {
+    background: #333;
+    color: #888;
+    border: 2px solid #444;
+    padding: 20px;
+    font-size: 1.2em;
+    cursor: not-allowed;
+    border-radius: 5px;
+    transition: all 0.2s ease;
+}
+
+.level-btn.unlocked {
+    background: linear-gradient(180deg, #444 0%, #222 100%);
+    color: #fff;
+    border-color: #ff4444;
+    cursor: pointer;
+}
+
+.level-btn.unlocked:hover {
+    background: linear-gradient(180deg, #ff4444 0%, #cc0000 100%);
+    transform: scale(1.1);
+}
+
+/* Level Intro */
+#level-intro {
+    max-width: 500px;
+}
+
+#level-enemies {
+    text-align: left;
+    margin: 20px 0;
+    padding: 15px;
+    background: rgba(255, 68, 68, 0.1);
+    border-radius: 5px;
+}
+
+#level-enemies p {
+    color: #ccc;
+    margin: 8px 0;
+}
+
+.level-timer {
+    color: #ff4444;
+    font-size: 1.5em;
+    margin: 20px 0;
+}
+
+/* Stats */
+.stats {
+    background: rgba(255, 68, 68, 0.1);
+    padding: 20px 40px;
+    border-radius: 5px;
+    margin: 20px 0;
+}
+
+.stats p {
+    color: #ccc;
+    font-size: 1.2em;
+    margin: 10px 0;
+}
+
+.stats span {
+    color: #ff4444;
+    font-weight: bold;
+}
+
+/* HUD */
+#hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    pointer-events: none;
+    z-index: 50;
+}
+
+.hud-top {
+    display: flex;
+    justify-content: space-around;
+    padding: 15px 20px;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+.hud-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.hud-item .label {
+    color: #888;
+    font-size: 0.8em;
+    letter-spacing: 2px;
+}
+
+.hud-item span:not(.label) {
+    color: #fff;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.hud-item.combo span:not(.label) {
+    color: #ffcc00;
+}
+
+/* Boss Health Bar */
+#boss-health-container {
+    position: absolute;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 400px;
+    text-align: center;
+}
+
+#boss-name {
+    color: #ff4444;
+    font-size: 1.2em;
+    font-weight: bold;
+    text-shadow: 0 0 10px #ff4444;
+    letter-spacing: 3px;
+}
+
+.boss-health-bar {
+    width: 100%;
+    height: 20px;
+    background: #333;
+    border: 2px solid #ff4444;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 5px;
+}
+
+#boss-health-fill {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #ff0000 0%, #ff4444 50%, #ff0000 100%);
+    transition: width 0.2s ease;
+}
+
+/* Credits Footer */
+.credits-footer {
+    margin-top: 30px;
+    color: #555;
+    font-size: 0.9em;
+}
+
+/* Animations */
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.shake {
+    animation: shake 0.3s ease-in-out;
+}
+
+/* Mobile Warning */
+@media (max-width: 768px) {
+    .menu h1 {
+        font-size: 1.8em;
+    }
+
+    .menu h2 {
+        font-size: 1.4em;
+    }
+
+    .menu-btn {
+        padding: 12px 30px;
+        font-size: 1em;
+        min-width: 150px;
+    }
+
+    #level-buttons {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 5px;
+    }
+
+    .level-btn {
+        padding: 10px;
+        font-size: 1em;
+    }
+}

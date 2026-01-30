@@ -1,0 +1,113 @@
+================================================================================
+                    ZOMBIE APOCALYPSE - 10 LEVELS OF SURVIVAL
+                                   CREDITS
+================================================================================
+
+GAME DESIGN & DEVELOPMENT
+-------------------------
+Created with HTML5 Canvas and Vanilla JavaScript
+No external libraries or frameworks used
+
+GRAPHICS
+--------
+All graphics are procedurally generated using the HTML5 Canvas 2D API.
+No external sprite assets are used in this version.
+
+Zombie and boss designs are created using:
+- Canvas primitive shapes (circles, rectangles, paths)
+- Dynamic color schemes
+- Real-time animation calculations
+
+AUDIO
+-----
+All sound effects are procedurally generated using the Web Audio API.
+No external audio files are used.
+
+Sound generation techniques include:
+- Oscillator-based tone generation
+- Noise buffers for explosion effects
+- Frequency modulation for dynamic sounds
+- Envelope generators for natural decay
+
+FONTS
+-----
+System fonts used:
+- Segoe UI (Windows)
+- Tahoma
+- Geneva
+- Verdana
+- Arial (fallback)
+
+TOOLS USED
+----------
+- Visual Studio Code - Code editing
+- Chrome DevTools - Debugging
+- Docker - Containerization
+- nginx - Web server
+
+FREE RESOURCE ALTERNATIVES
+--------------------------
+If you wish to enhance the game with external assets, consider these free resources:
+
+Sprites:
+- OpenGameArt.org (https://opengameart.org)
+  License: Various (CC0, CC-BY, GPL)
+
+- Kenney.nl (https://kenney.nl/assets)
+  License: CC0 (Public Domain)
+
+- itch.io Game Assets (https://itch.io/game-assets/free)
+  License: Various (check individual assets)
+
+Audio:
+- Freesound.org (https://freesound.org)
+  License: Various (CC0, CC-BY)
+
+- OpenGameArt.org Audio Section
+  License: Various (CC0, CC-BY, GPL)
+
+Fonts:
+- Google Fonts (https://fonts.google.com)
+  License: Open Font License
+
+SPECIAL THANKS
+--------------
+- The HTML5 and JavaScript communities
+- MDN Web Docs for excellent documentation
+- All the players who survive the apocalypse!
+
+================================================================================
+                          LICENSE INFORMATION
+================================================================================
+
+This game is provided as-is for educational and entertainment purposes.
+
+The source code may be freely modified, distributed, and used in personal
+or commercial projects.
+
+No warranty is provided. Use at your own risk.
+
+================================================================================
+                              VERSION HISTORY
+================================================================================
+
+v1.0.0 (Initial Release)
+- 10 complete levels with unique themes
+- 11 zombie types with distinct behaviors
+- 10 epic boss battles
+- Combo scoring system
+- Procedural audio
+- Docker deployment support
+
+================================================================================
+
+Thank you for playing Zombie Apocalypse!
+
+If you enjoyed the game, consider:
+- Sharing it with friends
+- Contributing improvements
+- Creating your own levels
+
+Stay alive out there!
+
+================================================================================
