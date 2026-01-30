@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zombie Apocalypse - 10 Levels of Survival</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Main Menu -->
+        <div id="main-menu" class="menu">
+            <h1>ZOMBIE APOCALYPSE</h1>
+            <p class="subtitle">10 Levels of Survival</p>
+            <button id="start-btn" class="menu-btn">START GAME</button>
+            <button id="level-select-btn" class="menu-btn">LEVEL SELECT</button>
+            <button id="controls-btn" class="menu-btn">CONTROLS</button>
+            <div class="credits-footer">
+                <p>Use headphones for best experience</p>
+            </div>
+        </div>
+
+        <!-- Level Select Menu -->
+        <div id="level-select-menu" class="menu hidden">
+            <h2>SELECT LEVEL</h2>
+            <div id="level-buttons"></div>
+            <button id="back-to-menu-btn" class="menu-btn">BACK</button>
+        </div>
+
+        <!-- Controls Menu -->
+        <div id="controls-menu" class="menu hidden">
+            <h2>CONTROLS</h2>
+            <div class="controls-list">
+                <p><span class="key">WASD</span> or <span class="key">Arrow Keys</span> - Move</p>
+                <p><span class="key">Mouse</span> - Aim</p>
+                <p><span class="key">Left Click</span> - Shoot</p>
+                <p><span class="key">Space</span> - Pause</p>
+                <p><span class="key">R</span> - Restart Level</p>
+            </div>
+            <button id="controls-back-btn" class="menu-btn">BACK</button>
+        </div>
+
+        <!-- Level Intro Screen -->
+        <div id="level-intro" class="menu hidden">
+            <h2 id="level-title"></h2>
+            <p id="level-theme"></p>
+            <div id="level-enemies"></div>
+            <p class="level-timer">Survive for 3:00</p>
+            <button id="start-level-btn" class="menu-btn">BEGIN</button>
+        </div>
+
+        <!-- Pause Menu -->
+        <div id="pause-menu" class="menu hidden">
+            <h2>PAUSED</h2>
+            <button id="resume-btn" class="menu-btn">RESUME</button>
+            <button id="restart-btn" class="menu-btn">RESTART</button>
+            <button id="quit-btn" class="menu-btn">QUIT TO MENU</button>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="game-over" class="menu hidden">
+            <h2>GAME OVER</h2>
+            <p id="death-message">You were overwhelmed by the horde!</p>
+            <div class="stats">
+                <p>Level: <span id="go-level">1</span></p>
+                <p>Kills: <span id="go-kills">0</span></p>
+                <p>Score: <span id="go-score">0</span></p>
+                <p>Time Survived: <span id="go-time">0:00</span></p>
+            </div>
+            <button id="retry-btn" class="menu-btn">RETRY</button>
+            <button id="go-menu-btn" class="menu-btn">MAIN MENU</button>
+        </div>
+
+        <!-- Level Complete Screen -->
+        <div id="level-complete" class="menu hidden">
+            <h2>LEVEL COMPLETE!</h2>
+            <div class="stats">
+                <p>Kills: <span id="lc-kills">0</span></p>
+                <p>Score: <span id="lc-score">0</span></p>
+                <p>Best Combo: <span id="lc-combo">0</span></p>
+            </div>
+            <button id="next-level-btn" class="menu-btn">NEXT LEVEL</button>
+        </div>
+
+        <!-- Victory Screen -->
+        <div id="victory-screen" class="menu hidden">
+            <h1>VICTORY!</h1>
+            <p class="subtitle">You survived the Zombie Apocalypse!</p>
+            <div class="stats">
+                <p>Total Kills: <span id="v-kills">0</span></p>
+                <p>Final Score: <span id="v-score">0</span></p>
+            </div>
+            <button id="play-again-btn" class="menu-btn">PLAY AGAIN</button>
+            <button id="v-menu-btn" class="menu-btn">MAIN MENU</button>
+        </div>
+
+        <!-- HUD -->
+        <div id="hud" class="hidden">
+            <div class="hud-top">
+                <div class="hud-item">
+                    <span class="label">LEVEL</span>
+                    <span id="hud-level">1</span>
+                </div>
+                <div class="hud-item">
+                    <span class="label">TIME</span>
+                    <span id="hud-time">3:00</span>
+                </div>
+                <div class="hud-item">
+                    <span class="label">KILLS</span>
+                    <span id="hud-kills">0</span>
+                </div>
+                <div class="hud-item">
+                    <span class="label">SCORE</span>
+                    <span id="hud-score">0</span>
+                </div>
+                <div class="hud-item combo">
+                    <span class="label">COMBO</span>
+                    <span id="hud-combo">x1</span>
+                </div>
+            </div>
+            <div id="boss-health-container" class="hidden">
+                <span id="boss-name">BOSS</span>
+                <div class="boss-health-bar">
+                    <div id="boss-health-fill"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Files -->
+    <script src="js/utils.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/particles.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/bullets.js"></script>
+    <script src="js/zombies.js"></script>
+    <script src="js/bosses.js"></script>
+    <script src="js/levels.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>

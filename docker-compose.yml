@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  zombie-game:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zombie-apocalypse-game
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+# Optional: Add a development service with live reload
+  zombie-game-dev:
+    image: nginx:alpine
+    container_name: zombie-game-dev
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/usr/share/nginx/html:ro
+    profiles:
+      - dev
