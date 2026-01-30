@@ -50,6 +50,9 @@ class Game {
         // Setup input handlers
         this.setupInputHandlers();
 
+        // Setup resize handler for full screen
+        this.setupResizeHandler();
+
         // Setup UI callbacks
         UI.init({
             onStartGame: () => this.startGame(),
@@ -66,6 +69,18 @@ class Game {
 
         // Start game loop
         requestAnimationFrame((time) => this.gameLoop(time));
+    }
+
+    setupResizeHandler() {
+        const resize = () => {
+            GAME_WIDTH = window.innerWidth;
+            GAME_HEIGHT = window.innerHeight;
+            this.canvas.width = GAME_WIDTH;
+            this.canvas.height = GAME_HEIGHT;
+        };
+
+        window.addEventListener('resize', resize);
+        resize(); // Initial resize
     }
 
     setupInputHandlers() {
