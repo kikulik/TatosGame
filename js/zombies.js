@@ -1067,16 +1067,20 @@ class ZombieManager {
         }
     }
 
-    checkBulletCollisions(bulletManager) {
+    checkBulletCollisions(bulletManager, lootBoxManager) {
         let kills = [];
+        const processedExplosions = new Set(); // Track which bullets have already exploded
 
-        for (const zombie of this.zombies) {
-            if (!zombie.alive) continue;
+        const active = bulletManager.getActive();
 
-            const active = bulletManager.getActive();
-            for (let i = active.length - 1; i >= 0; i--) {
-                const bullet = active[i];
-                if (!bullet.active) continue;
+        for (let i = active.length - 1; i >= 0; i--) {
+            const bullet = active[i];
+            if (!bullet.active) continue;
+
+            let bulletHit = false;
+
+            for (const zombie of this.zombies) {
+                if (!zombie.alive) continue;
 
                 if (Utils.circleCollision(
                     bullet.x, bullet.y, bullet.radius,
@@ -1087,23 +1091,70 @@ class ZombieManager {
                         // Blocked by shield
                         Particles.sparks(bullet.x, bullet.y, bullet.angle, 8);
                         bullet.active = false;
-                        continue;
+                        bulletHit = true;
+                        break;
                     }
 
                     // Create impact effect
                     Particles.sparks(bullet.x, bullet.y, bullet.angle, 5);
                     Particles.blood(zombie.x, zombie.y, bullet.angle, 5);
 
+                    // Handle explosive bullets (rockets)
+                    if (bullet.isExplosive && !processedExplosions.has(bullet)) {
+                        processedExplosions.add(bullet);
+                        bullet.explode();
+
+                        // Deal area damage to all zombies in explosion radius
+                        for (const targetZombie of this.zombies) {
+                            if (!targetZombie.alive) continue;
+
+                            const dist = Utils.distance(bullet.x, bullet.y, targetZombie.x, targetZombie.y);
+                            if (dist < bullet.explosionRadius) {
+                                // Damage falls off with distance
+                                const damageMultiplier = 1 - (dist / bullet.explosionRadius) * 0.5;
+                                const explosionDamage = Math.ceil(bullet.damage * damageMultiplier);
+
+                                Particles.blood(targetZombie.x, targetZombie.y, Utils.random(0, Math.PI * 2), 8);
+
+                                if (targetZombie.takeDamage(explosionDamage)) {
+                                    const killData = {
+                                        type: targetZombie.type,
+                                        points: targetZombie.points,
+                                        x: targetZombie.x,
+                                        y: targetZombie.y
+                                    };
+                                    kills.push(killData);
+
+                                    // Try to spawn loot box (1% chance)
+                                    if (lootBoxManager) {
+                                        lootBoxManager.trySpawn(targetZombie.x, targetZombie.y);
+                                    }
+                                }
+                            }
+                        }
+                        bullet.active = false;
+                        bulletHit = true;
+                        break;
+                    }
+
                     bullet.active = false;
+                    bulletHit = true;
 
                     if (zombie.takeDamage(bullet.damage)) {
-                        kills.push({
+                        const killData = {
                             type: zombie.type,
                             points: zombie.points,
                             x: zombie.x,
                             y: zombie.y
-                        });
+                        };
+                        kills.push(killData);
+
+                        // Try to spawn loot box (1% chance)
+                        if (lootBoxManager) {
+                            lootBoxManager.trySpawn(zombie.x, zombie.y);
+                        }
                     }
+                    break;
                 }
             }
         }

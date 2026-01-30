@@ -19,6 +19,7 @@ class Game {
         this.zombieManager = null;
         this.bossManager = null;
         this.levelManager = null;
+        this.lootBoxManager = null;
 
         // Score tracking
         this.score = 0;
@@ -46,6 +47,7 @@ class Game {
         this.zombieManager = new ZombieManager();
         this.bossManager = new BossManager();
         this.levelManager = new LevelManager();
+        this.lootBoxManager = new LootBoxManager();
 
         // Setup input handlers
         this.setupInputHandlers();
@@ -181,6 +183,7 @@ class Game {
         this.bulletManager.clear();
         this.zombieManager.clear();
         this.bossManager.clear();
+        this.lootBoxManager.clear();
         Particles.clear();
         Effects.clear();
 
@@ -326,8 +329,8 @@ class Game {
         // Update boss
         this.bossManager.update(dt, this.player.x, this.player.y);
 
-        // Check bullet-zombie collisions
-        const zombieKills = this.zombieManager.checkBulletCollisions(this.bulletManager);
+        // Check bullet-zombie collisions (with explosive support)
+        const zombieKills = this.zombieManager.checkBulletCollisions(this.bulletManager, this.lootBoxManager);
         for (const kill of zombieKills) {
             this.addKill(kill);
         }
@@ -338,6 +341,19 @@ class Game {
             this.addScore(bossResult.points, this.player.x, this.player.y - 50);
             Effects.addText(GAME_WIDTH / 2, GAME_HEIGHT / 2, `${bossResult.name} DEFEATED!`, '#FFD700', 2, 36);
             UI.hideBossHealth();
+        }
+
+        // Update loot boxes
+        this.lootBoxManager.update(dt);
+
+        // Check for weapon pickups
+        if (this.player.alive) {
+            const pickedUpWeapon = this.lootBoxManager.checkPickups(
+                this.player.x, this.player.y, this.player.radius
+            );
+            if (pickedUpWeapon) {
+                this.player.setWeapon(pickedUpWeapon);
+            }
         }
 
         // Check player-zombie collisions
@@ -396,6 +412,7 @@ class Game {
 
         if (this.state === 'playing' || this.state === 'paused') {
             // Draw game objects
+            this.lootBoxManager.draw(ctx);
             this.zombieManager.draw(ctx);
             this.bossManager.draw(ctx);
             this.player.draw(ctx);
