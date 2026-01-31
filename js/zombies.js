@@ -189,12 +189,12 @@ class Zombie {
     }
 }
 
-// Runner Zombie - Fast and zigzags
+// Runner Zombie - Fast and zigzags (green zombie)
 class RunnerZombie extends Zombie {
     constructor(x, y) {
         super(x, y);
         this.type = 'runner';
-        this.speed = 140;
+        this.speed = 112; // 20% slower than before (was 140)
         this.radius = 12;
         this.hitRadius = 12;
         this.color = Colors.zombies.runner;
@@ -607,18 +607,28 @@ class HelicopterZombie extends Zombie {
         this.speed = 80;
         this.radius = 35;
         this.hitRadius = 30;
-        this.health = 8;
-        this.maxHealth = 8;
+        this.health = 6; // 20% easier to kill (was 8)
+        this.maxHealth = 6;
         this.color = Colors.zombies.helicopter;
         this.points = 75;
         this.rotorAngle = 0;
         this.dropTimer = 0;
         this.dropInterval = 3;
         this.canDrop = true;
+        // Shooting system
+        this.shootTimer = 0;
+        this.shootInterval = 10; // Shoots every 10 seconds
+        this.canShoot = false;
+        this.targetPlayerX = 0;
+        this.targetPlayerY = 0;
     }
 
     update(dt, playerX, playerY) {
         if (!this.alive) return;
+
+        // Store player position for shooting
+        this.targetPlayerX = playerX;
+        this.targetPlayerY = playerY;
 
         // Strafe movement
         const angle = Utils.angle(this.x, this.y, playerX, playerY);
@@ -647,6 +657,13 @@ class HelicopterZombie extends Zombie {
             this.canDrop = true;
         }
 
+        // Shoot timer
+        this.shootTimer += dt;
+        if (this.shootTimer >= this.shootInterval) {
+            this.shootTimer = 0;
+            this.canShoot = true;
+        }
+
         // Keep in bounds
         this.x = Utils.clamp(this.x, 50, GAME_WIDTH - 50);
         this.y = Utils.clamp(this.y, 50, GAME_HEIGHT - 50);
@@ -658,6 +675,28 @@ class HelicopterZombie extends Zombie {
             return true;
         }
         return false;
+    }
+
+    shouldShoot() {
+        if (this.canShoot) {
+            this.canShoot = false;
+            return true;
+        }
+        return false;
+    }
+
+    getShootData() {
+        // Returns data for spawning a slow bullet toward the player
+        const angle = Utils.angle(this.x, this.y, this.targetPlayerX, this.targetPlayerY);
+        return {
+            x: this.x,
+            y: this.y,
+            angle: angle,
+            speed: 150, // Slow bullet
+            damage: 0.5, // Half damage
+            color: '#ff6600',
+            radius: 8
+        };
     }
 
     die() {
@@ -1075,7 +1114,7 @@ class ZombieManager {
         return this.spawn(type, x, y, playerX, playerY);
     }
 
-    update(dt, playerX, playerY, lootBoxManager = null, wallManager = null) {
+    update(dt, playerX, playerY, lootBoxManager = null, wallManager = null, bulletManager = null) {
         const toSpawnFromVehicles = [];
         const afterburnKills = [];
 
@@ -1109,6 +1148,22 @@ class ZombieManager {
                     x: zombie.x,
                     y: zombie.y
                 });
+            }
+
+            // Check for helicopter shooting
+            if (zombie.type === 'helicopter' && zombie.alive && zombie.shouldShoot() && bulletManager) {
+                const shootData = zombie.getShootData();
+                bulletManager.spawnEnemyBullet(
+                    shootData.x,
+                    shootData.y,
+                    shootData.angle,
+                    shootData.speed,
+                    shootData.damage,
+                    shootData.color,
+                    shootData.radius
+                );
+                // Visual effect for helicopter shooting
+                Particles.muzzleFlash(shootData.x, shootData.y, shootData.angle);
             }
 
             // Remove dead zombies (but keep track for scoring)

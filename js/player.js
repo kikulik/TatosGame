@@ -20,7 +20,7 @@ class Player {
         // Dash system
         this.dashCooldown = 0;
         this.dashMaxCooldown = 10; // 10 seconds cooldown
-        this.dashDistance = 150;
+        this.dashDistance = 300;
         this.isDashing = false;
         this.dashDuration = 0.1;
         this.dashTimer = 0;

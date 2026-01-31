@@ -132,8 +132,8 @@ class Game {
         // Keyboard
         document.addEventListener('keydown', (e) => {
             if (this.state === 'playing') {
-                // Handle inventory
-                if (e.code === 'KeyI') {
+                // Handle inventory with E key
+                if (e.code === 'KeyE') {
                     this.toggleInventory();
                     return;
                 }
@@ -153,8 +153,8 @@ class Game {
                     this.player.dash(this.mouseX, this.mouseY);
                 }
 
-                // Pickup with E
-                if (e.code === 'KeyE') {
+                // Pickup with F
+                if (e.code === 'KeyF') {
                     this.tryPickupLoot();
                 }
 
@@ -283,7 +283,29 @@ class Game {
         );
     }
 
-    // Try to pick up loot when E is pressed
+    // Check if player is hit by enemy bullets
+    checkEnemyBulletCollision() {
+        if (!this.player.alive) return false;
+
+        const bullets = this.bulletManager.getActive();
+        for (let i = bullets.length - 1; i >= 0; i--) {
+            const bullet = bullets[i];
+            if (!bullet.active || !bullet.isEnemyBullet) continue;
+
+            if (Utils.circleCollision(
+                bullet.x, bullet.y, bullet.radius,
+                this.player.x, this.player.y, this.player.radius
+            )) {
+                // Hit by enemy bullet
+                Particles.sparks(bullet.x, bullet.y, bullet.angle + Math.PI, 8);
+                bullet.active = false;
+                return true; // Player hit
+            }
+        }
+        return false;
+    }
+
+    // Try to pick up loot when F is pressed
     tryPickupLoot() {
         if (!this.player.alive || this.inventoryOpen) return;
 
@@ -460,8 +482,8 @@ class Game {
             return;
         }
 
-        // Update zombies (pass lootBoxManager for afterburn kills, wallManager for collision)
-        const afterburnKills = this.zombieManager.update(dt, this.player.x, this.player.y, this.lootBoxManager, this.wallManager);
+        // Update zombies (pass lootBoxManager for afterburn kills, wallManager for collision, bulletManager for helicopter shooting)
+        const afterburnKills = this.zombieManager.update(dt, this.player.x, this.player.y, this.lootBoxManager, this.wallManager, this.bulletManager);
         for (const kill of afterburnKills) {
             this.addKill(kill);
         }
@@ -504,6 +526,12 @@ class Game {
             }
 
             if (this.bossManager.checkPlayerCollision(this.player.x, this.player.y, this.player.radius)) {
+                this.player.die();
+                setTimeout(() => this.gameOver(), 1000);
+            }
+
+            // Check enemy bullet collision with player
+            if (this.checkEnemyBulletCollision()) {
                 this.player.die();
                 setTimeout(() => this.gameOver(), 1000);
             }

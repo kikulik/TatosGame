@@ -50,7 +50,7 @@ const WeaponTypes = {
     rocketLauncher: {
         name: 'Rocket Launcher',
         fireRate: 1.2,
-        damage: 1.5, // 50% more damage than normal gun
+        damage: 2, // 2x damage of normal gun
         speed: 400,
         bulletSize: 10,
         spread: 0,

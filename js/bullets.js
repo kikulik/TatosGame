@@ -31,6 +31,8 @@ class Bullet {
         this.hasAfterburn = false;
         this.afterburnDamage = 0;
         this.afterburnDuration = 0;
+        // Enemy bullet flag
+        this.isEnemyBullet = false;
     }
 
     init(x, y, angle) {
@@ -235,6 +237,30 @@ class BulletManager {
     spawnWeaponBullet(x, y, angle, weapon, targetX = null, targetY = null) {
         const bullet = this.pool.get();
         bullet.initFromWeapon(x, y, angle, weapon, targetX, targetY);
+        return bullet;
+    }
+
+    // Spawn enemy bullet (for helicopters, etc.)
+    spawnEnemyBullet(x, y, angle, speed, damage, color, radius) {
+        const bullet = this.pool.get();
+        bullet.x = x;
+        bullet.y = y;
+        bullet.startX = x;
+        bullet.startY = y;
+        bullet.angle = angle;
+        bullet.speed = speed;
+        bullet.vx = Math.cos(angle) * speed;
+        bullet.vy = Math.sin(angle) * speed;
+        bullet.active = true;
+        bullet.damage = damage;
+        bullet.radius = radius;
+        bullet.color = color;
+        bullet.trailColor = color.replace(')', ', 0.6)').replace('rgb', 'rgba');
+        bullet.isExplosive = false;
+        bullet.isFlame = false;
+        bullet.range = Infinity;
+        bullet.distanceTraveled = 0;
+        bullet.isEnemyBullet = true; // Mark as enemy bullet
         return bullet;
     }
 
