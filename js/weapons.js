@@ -50,7 +50,7 @@ const WeaponTypes = {
     rocketLauncher: {
         name: 'Rocket Launcher',
         fireRate: 1.2,
-        damage: 10,
+        damage: 1.5, // 50% more damage than normal gun
         speed: 400,
         bulletSize: 10,
         spread: 0,
@@ -66,7 +66,7 @@ const WeaponTypes = {
     flamethrower: {
         name: 'Flamethrower',
         fireRate: 0.03,
-        damage: 0.5,
+        damage: 0.65, // -35% damage than normal gun
         speed: 500,
         bulletSize: 8,
         spread: 0.4,
@@ -75,13 +75,16 @@ const WeaponTypes = {
         trailColor: 'rgba(255, 100, 0, 0.6)',
         isExplosive: false,
         isFlame: true,
-        range: 250,
+        hasAfterburn: true, // Causes afterburn damage over time
+        afterburnDamage: 0.2, // Damage per tick
+        afterburnDuration: 3, // Duration in seconds
+        range: 312, // 25% more range
         soundType: 'flame'
     },
     doubleMinigun: {
         name: 'Double Minigun',
         fireRate: 0.04,
-        damage: 1,
+        damage: 0.5, // Half damage of normal gun
         speed: 1000,
         bulletSize: 4,
         spread: 0.1,
@@ -93,6 +96,22 @@ const WeaponTypes = {
         range: Infinity,
         soundType: 'minigun',
         dualOffset: 8
+    },
+    tripleMinigun: {
+        name: 'Triple Minigun',
+        fireRate: 0.035,
+        damage: 0.5, // Half damage of normal gun
+        speed: 1100,
+        bulletSize: 4,
+        spread: 0.12,
+        bulletsPerShot: 3,
+        color: '#00ff88',
+        trailColor: 'rgba(0, 255, 136, 0.8)',
+        isExplosive: false,
+        isFlame: false,
+        range: Infinity,
+        soundType: 'minigun',
+        tripleOffset: 10
     }
 };
 
@@ -121,12 +140,37 @@ class Weapon {
         this.range = config.range;
         this.soundType = config.soundType;
         this.dualOffset = config.dualOffset || 0;
+        this.tripleOffset = config.tripleOffset || 0;
+        this.hasAfterburn = config.hasAfterburn || false;
+        this.afterburnDamage = config.afterburnDamage || 0;
+        this.afterburnDuration = config.afterburnDuration || 0;
     }
 
     shoot(x, y, angle, bulletManager, targetX = null, targetY = null) {
         const bullets = [];
 
-        if (this.type === 'doubleMinigun') {
+        if (this.type === 'tripleMinigun') {
+            // Triple guns - shoot from three positions
+            const perpAngle = angle + Math.PI / 2;
+            const offset1X = Math.cos(perpAngle) * this.tripleOffset;
+            const offset1Y = Math.sin(perpAngle) * this.tripleOffset;
+            const offset2X = Math.cos(perpAngle) * -this.tripleOffset;
+            const offset2Y = Math.sin(perpAngle) * -this.tripleOffset;
+
+            const spreadAngle1 = angle + Utils.random(-this.spread, this.spread);
+            const spreadAngle2 = angle + Utils.random(-this.spread, this.spread);
+            const spreadAngle3 = angle + Utils.random(-this.spread, this.spread);
+
+            bullets.push(bulletManager.spawnWeaponBullet(
+                x + offset1X, y + offset1Y, spreadAngle1, this
+            ));
+            bullets.push(bulletManager.spawnWeaponBullet(
+                x, y, spreadAngle2, this
+            ));
+            bullets.push(bulletManager.spawnWeaponBullet(
+                x + offset2X, y + offset2Y, spreadAngle3, this
+            ));
+        } else if (this.type === 'doubleMinigun') {
             // Dual guns - shoot from two positions
             const perpAngle = angle + Math.PI / 2;
             const offset1X = Math.cos(perpAngle) * this.dualOffset;
@@ -183,18 +227,23 @@ class Weapon {
             isFlame: this.isFlame,
             range: this.range,
             soundType: this.soundType,
-            dualOffset: this.dualOffset
+            dualOffset: this.dualOffset,
+            tripleOffset: this.tripleOffset,
+            hasAfterburn: this.hasAfterburn,
+            afterburnDamage: this.afterburnDamage,
+            afterburnDuration: this.afterburnDuration
         };
     }
 }
 
 // Loot drop probabilities (must sum to 100)
 const WeaponDropRates = {
-    shotgun: 40,
-    uzi: 30,
+    shotgun: 41,
+    uzi: 31,
     rocketLauncher: 15,
-    flamethrower: 10,
-    doubleMinigun: 5
+    flamethrower: 8, // 8% drop chance
+    doubleMinigun: 3,
+    tripleMinigun: 2 // 2% drop chance (rare!)
 };
 
 // Function to get random weapon from loot box

@@ -195,7 +195,7 @@ class Player {
         this.knockbackY += Math.sin(angle) * force;
     }
 
-    update(dt, bulletManager) {
+    update(dt, bulletManager, wallManager = null) {
         if (!this.alive) return;
 
         // Update dash cooldown
@@ -227,6 +227,11 @@ class Player {
             // Keep player in bounds during dash
             this.x = Utils.clamp(this.x, this.radius, GAME_WIDTH - this.radius);
             this.y = Utils.clamp(this.y, this.radius, GAME_HEIGHT - this.radius);
+
+            // Handle wall collision during dash
+            if (wallManager) {
+                wallManager.resolveCircleCollision(this);
+            }
             return; // Skip normal movement during dash
         }
 
@@ -261,6 +266,11 @@ class Player {
         // Keep player in bounds
         this.x = Utils.clamp(this.x, this.radius, GAME_WIDTH - this.radius);
         this.y = Utils.clamp(this.y, this.radius, GAME_HEIGHT - this.radius);
+
+        // Handle wall collision
+        if (wallManager) {
+            wallManager.resolveCircleCollision(this);
+        }
 
         // Handle shooting
         if (this.fireCooldown > 0) {
@@ -405,6 +415,26 @@ class Player {
                 // Center body
                 ctx.fillStyle = '#333';
                 ctx.fillRect(this.radius - 8, -4, 10, 8);
+                break;
+
+            case 'tripleMinigun':
+                // Three gun barrels
+                ctx.fillStyle = '#00aa66';
+                ctx.fillRect(this.radius - 5, -10, 30, 4);
+                ctx.fillRect(this.radius - 5, -2, 30, 4);
+                ctx.fillRect(this.radius - 5, 6, 30, 4);
+                ctx.fillStyle = '#00ff88';
+                ctx.fillRect(this.radius - 5, -10, 30, 2);
+                ctx.fillRect(this.radius - 5, -2, 30, 2);
+                ctx.fillRect(this.radius - 5, 6, 30, 2);
+                // Center body
+                ctx.fillStyle = '#333';
+                ctx.fillRect(this.radius - 10, -6, 12, 12);
+                // Power core
+                ctx.fillStyle = '#00ff88';
+                ctx.beginPath();
+                ctx.arc(this.radius - 4, 0, 4, 0, Math.PI * 2);
+                ctx.fill();
                 break;
 
             default:
