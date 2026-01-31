@@ -132,9 +132,13 @@ class Game {
         // Keyboard
         document.addEventListener('keydown', (e) => {
             if (this.state === 'playing') {
-                // Handle inventory with E key
+                // Handle E key: pickup weapon if nearby, otherwise toggle inventory
                 if (e.code === 'KeyE') {
-                    this.toggleInventory();
+                    if (!this.inventoryOpen && this.lootBoxManager.hasPickupAvailable()) {
+                        this.tryPickupLoot();
+                    } else {
+                        this.toggleInventory();
+                    }
                     return;
                 }
 
