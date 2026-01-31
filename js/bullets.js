@@ -27,6 +27,10 @@ class Bullet {
         this.weaponType = 'pistol';
         this.targetX = null; // For click-to-detonate rockets
         this.targetY = null;
+        // Afterburn properties
+        this.hasAfterburn = false;
+        this.afterburnDamage = 0;
+        this.afterburnDuration = 0;
     }
 
     init(x, y, angle) {
@@ -64,6 +68,10 @@ class Bullet {
         // For rockets - they explode where you clicked
         this.targetX = targetX;
         this.targetY = targetY;
+        // Afterburn properties for flamethrower
+        this.hasAfterburn = weapon.hasAfterburn || false;
+        this.afterburnDamage = weapon.afterburnDamage || 0;
+        this.afterburnDuration = weapon.afterburnDuration || 0;
     }
 
     update(dt) {
@@ -230,12 +238,30 @@ class BulletManager {
         return bullet;
     }
 
-    update(dt) {
+    update(dt, wallManager = null) {
         const active = this.pool.getActive();
         for (let i = active.length - 1; i >= 0; i--) {
-            active[i].update(dt);
-            if (!active[i].active) {
-                this.pool.release(active[i]);
+            const bullet = active[i];
+            bullet.update(dt);
+
+            // Check wall collision (bullets stop at walls)
+            if (bullet.active && wallManager) {
+                const hitWall = wallManager.checkBulletCollision(bullet.x, bullet.y, bullet.radius);
+                if (hitWall) {
+                    // Create impact effect
+                    Particles.sparks(bullet.x, bullet.y, bullet.angle + Math.PI, 5);
+
+                    // Explosives still explode at walls
+                    if (bullet.isExplosive) {
+                        bullet.explode();
+                    }
+
+                    bullet.active = false;
+                }
+            }
+
+            if (!bullet.active) {
+                this.pool.release(bullet);
             }
         }
     }

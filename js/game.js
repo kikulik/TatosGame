@@ -20,6 +20,7 @@ class Game {
         this.bossManager = null;
         this.levelManager = null;
         this.lootBoxManager = null;
+        this.wallManager = null;
 
         // Score tracking
         this.score = 0;
@@ -59,6 +60,7 @@ class Game {
         this.bossManager = new BossManager();
         this.levelManager = new LevelManager();
         this.lootBoxManager = new LootBoxManager();
+        this.wallManager = new WallManager();
 
         // Setup input handlers
         this.setupInputHandlers();
@@ -224,8 +226,12 @@ class Game {
         this.zombieManager.clear();
         this.bossManager.clear();
         this.lootBoxManager.clear();
+        this.wallManager.clear();
         Particles.clear();
         Effects.clear();
+
+        // Generate walls for this level
+        this.wallManager.generateForLevel(this.levelManager.currentLevel);
 
         // Reset level
         this.levelManager.reset();
@@ -438,13 +444,13 @@ class Game {
 
         // Update player
         this.player.updateAim(this.mouseX, this.mouseY);
-        this.player.update(dt, this.bulletManager);
+        this.player.update(dt, this.bulletManager, this.wallManager);
 
         // Update dash cooldown UI
         UI.updateDashCooldown(this.player.getDashCooldownPercent());
 
-        // Update bullets
-        this.bulletManager.update(dt);
+        // Update bullets (pass wallManager for collision)
+        this.bulletManager.update(dt, this.wallManager);
 
         // Update level spawning
         const levelResult = this.levelManager.update(dt, this.zombieManager, this.bossManager, this.player);
@@ -454,8 +460,11 @@ class Game {
             return;
         }
 
-        // Update zombies
-        this.zombieManager.update(dt, this.player.x, this.player.y);
+        // Update zombies (pass lootBoxManager for afterburn kills, wallManager for collision)
+        const afterburnKills = this.zombieManager.update(dt, this.player.x, this.player.y, this.lootBoxManager, this.wallManager);
+        for (const kill of afterburnKills) {
+            this.addKill(kill);
+        }
 
         // Update boss
         this.bossManager.update(dt, this.player.x, this.player.y);
@@ -563,6 +572,9 @@ class Game {
         this.drawBackground(ctx);
 
         if (this.state === 'playing' || this.state === 'paused') {
+            // Draw walls first (behind entities)
+            this.wallManager.draw(ctx);
+
             // Draw game objects
             this.lootBoxManager.draw(ctx);
             this.zombieManager.draw(ctx);

@@ -22,6 +22,12 @@ class Zombie {
         // Movement state
         this.targetX = 0;
         this.targetY = 0;
+
+        // Afterburn state
+        this.isOnFire = false;
+        this.afterburnTimer = 0;
+        this.afterburnDamage = 0;
+        this.afterburnTickTimer = 0;
     }
 
     reset() {
@@ -29,6 +35,41 @@ class Zombie {
         this.health = this.maxHealth;
         this.vx = 0;
         this.vy = 0;
+        this.isOnFire = false;
+        this.afterburnTimer = 0;
+        this.afterburnDamage = 0;
+        this.afterburnTickTimer = 0;
+    }
+
+    applyAfterburn(damage, duration) {
+        this.isOnFire = true;
+        this.afterburnTimer = duration;
+        this.afterburnDamage = damage;
+        this.afterburnTickTimer = 0;
+    }
+
+    updateAfterburn(dt) {
+        if (!this.isOnFire || !this.alive) return false;
+
+        this.afterburnTimer -= dt;
+        this.afterburnTickTimer += dt;
+
+        // Apply damage every 0.5 seconds
+        if (this.afterburnTickTimer >= 0.5) {
+            this.afterburnTickTimer = 0;
+            // Create fire particle effect
+            Particles.trail(this.x, this.y, Utils.randomChoice(['#ff4400', '#ff8800', '#ffcc00']), 8);
+
+            if (this.takeDamage(this.afterburnDamage)) {
+                return true; // Zombie died from afterburn
+            }
+        }
+
+        if (this.afterburnTimer <= 0) {
+            this.isOnFire = false;
+        }
+
+        return false;
     }
 
     init(x, y, playerX, playerY) {
@@ -78,8 +119,23 @@ class Zombie {
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle);
 
+        // Fire effect if on fire
+        if (this.isOnFire) {
+            ctx.save();
+            ctx.globalAlpha = 0.6;
+            const fireGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius + 8);
+            fireGradient.addColorStop(0, '#ff8800');
+            fireGradient.addColorStop(0.5, '#ff4400');
+            fireGradient.addColorStop(1, 'rgba(255, 68, 0, 0)');
+            ctx.fillStyle = fireGradient;
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius + 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+
         // Body
-        ctx.fillStyle = this.color;
+        ctx.fillStyle = this.isOnFire ? '#ff6600' : this.color;
         ctx.beginPath();
         ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
         ctx.fill();
@@ -1019,12 +1075,32 @@ class ZombieManager {
         return this.spawn(type, x, y, playerX, playerY);
     }
 
-    update(dt, playerX, playerY) {
+    update(dt, playerX, playerY, lootBoxManager = null, wallManager = null) {
         const toSpawnFromVehicles = [];
+        const afterburnKills = [];
 
         for (let i = this.zombies.length - 1; i >= 0; i--) {
             const zombie = this.zombies[i];
             zombie.update(dt, playerX, playerY);
+
+            // Handle wall collision for zombies
+            if (zombie.alive && wallManager) {
+                wallManager.resolveCircleCollision(zombie);
+            }
+
+            // Update afterburn damage
+            if (zombie.alive && zombie.updateAfterburn(dt)) {
+                // Zombie died from afterburn
+                afterburnKills.push({
+                    type: zombie.type,
+                    points: zombie.points,
+                    x: zombie.x,
+                    y: zombie.y
+                });
+                if (lootBoxManager) {
+                    lootBoxManager.trySpawn(zombie.x, zombie.y);
+                }
+            }
 
             // Check for helicopter drops
             if (zombie.type === 'helicopter' && zombie.alive && zombie.shouldDropZombie()) {
@@ -1056,6 +1132,8 @@ class ZombieManager {
         for (const spawn of toSpawnFromVehicles) {
             this.spawn(spawn.type, spawn.x, spawn.y, playerX, playerY);
         }
+
+        return afterburnKills;
     }
 
     draw(ctx) {
@@ -1139,6 +1217,11 @@ class ZombieManager {
 
                     bullet.active = false;
                     bulletHit = true;
+
+                    // Apply afterburn effect if bullet has it (flamethrower)
+                    if (bullet.hasAfterburn && zombie.alive) {
+                        zombie.applyAfterburn(bullet.afterburnDamage, bullet.afterburnDuration);
+                    }
 
                     if (zombie.takeDamage(bullet.damage)) {
                         const killData = {

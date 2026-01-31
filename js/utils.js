@@ -187,7 +187,8 @@ const Colors = {
         shotgun: '#ff8800',
         rocketLauncher: '#ff0000',
         flamethrower: '#ff4400',
-        doubleMinigun: '#ff00ff'
+        doubleMinigun: '#ff00ff',
+        tripleMinigun: '#00ff88'
     },
 
     lootBox: {
