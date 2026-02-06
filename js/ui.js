@@ -175,7 +175,7 @@ class UIManager {
     }
 
     // Inventory panel
-    showInventory(inventory, currentWeapon, onSelectWeapon) {
+    showInventory(inventory, currentWeapon, onSelectWeapon, upgradeLevel = 0, availableKills = 0, onUpgrade = null) {
         this.inventoryOpen = true;
         const container = this.elements.inventoryWeapons;
         if (!container) return;
@@ -203,6 +203,39 @@ class UIManager {
                 if (onSelectWeapon) onSelectWeapon(weaponType);
             });
         });
+
+        // Upgrade section
+        const upgradeContainer = document.getElementById('upgrade-section');
+        if (upgradeContainer) {
+            const upgradeDescriptions = {
+                1: 'Fire Rate +20%',
+                2: 'Damage +25%',
+                3: 'Fire Rate +20%'
+            };
+            const nextLevel = upgradeLevel + 1;
+            const canUpgrade = upgradeLevel < 3 && availableKills >= 100;
+            const maxed = upgradeLevel >= 3;
+
+            let activeUpgrades = '';
+            if (upgradeLevel >= 1) activeUpgrades += '<span class="upgrade-active">Lv1: Fire Rate +20%</span>';
+            if (upgradeLevel >= 2) activeUpgrades += '<span class="upgrade-active">Lv2: Damage +25%</span>';
+            if (upgradeLevel >= 3) activeUpgrades += '<span class="upgrade-active">Lv3: Fire Rate +20%</span>';
+
+            upgradeContainer.innerHTML = `
+                <div class="upgrade-header">UPGRADES (Level ${upgradeLevel}/3)</div>
+                <div class="upgrade-info">${activeUpgrades || '<span class="upgrade-none">No upgrades yet</span>'}</div>
+                <div class="upgrade-kills">Available Kills: ${availableKills}</div>
+                ${maxed ? '<button class="upgrade-btn maxed" disabled>MAX LEVEL</button>' :
+                    `<button class="upgrade-btn ${canUpgrade ? '' : 'locked'}" ${canUpgrade ? '' : 'disabled'}>
+                        UPGRADE Lv${nextLevel} (100 kills) - ${upgradeDescriptions[nextLevel]}
+                    </button>`
+                }
+            `;
+
+            if (canUpgrade && onUpgrade) {
+                upgradeContainer.querySelector('.upgrade-btn').addEventListener('click', onUpgrade);
+            }
+        }
 
         this.elements.inventoryPanel?.classList.remove('hidden');
     }

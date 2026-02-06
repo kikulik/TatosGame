@@ -183,6 +183,27 @@ class Bullet {
             ctx.beginPath();
             ctx.arc(-this.radius * 1.5, 0, this.radius * 0.4, 0, Math.PI * 2);
             ctx.fill();
+        } else if (this.weaponType === 'bow') {
+            // Arrow projectile
+            ctx.fillStyle = '#5a3a1a';
+            ctx.fillRect(-12, -1, 20, 2);
+            // Arrowhead
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.moveTo(10, 0);
+            ctx.lineTo(5, -4);
+            ctx.lineTo(5, 4);
+            ctx.closePath();
+            ctx.fill();
+            // Fletching
+            ctx.fillStyle = '#88cc44';
+            ctx.beginPath();
+            ctx.moveTo(-12, 0);
+            ctx.lineTo(-16, -3);
+            ctx.lineTo(-14, 0);
+            ctx.lineTo(-16, 3);
+            ctx.closePath();
+            ctx.fill();
         } else {
             // Regular bullet with trail
             const gradient = ctx.createLinearGradient(-15, 0, 5, 0);

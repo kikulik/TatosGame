@@ -48,6 +48,9 @@ class Game {
         // Inventory state
         this.inventoryOpen = false;
 
+        // Upgrade system
+        this.killsSpentOnUpgrades = 0;
+
         // Initialize
         this.init();
     }
@@ -190,6 +193,7 @@ class Game {
     startGame() {
         this.totalKills = 0;
         this.totalScore = 0;
+        this.killsSpentOnUpgrades = 0;
         this.playerName = UI.getPlayerName();
         this.levelManager.setLevel(1);
         // Full reset - no inventory preservation
@@ -265,10 +269,14 @@ class Game {
     openInventory() {
         this.inventoryOpen = true;
         this.player.shooting = false; // Stop shooting
+        const availableKills = this.totalKills + this.kills - this.killsSpentOnUpgrades;
         UI.showInventory(
             this.player.getInventory(),
             this.player.getWeaponType(),
-            (weaponType) => this.selectWeaponFromInventory(weaponType)
+            (weaponType) => this.selectWeaponFromInventory(weaponType),
+            this.player.getUpgradeLevel(),
+            availableKills,
+            () => this.tryUpgrade()
         );
     }
 
@@ -280,11 +288,32 @@ class Game {
     selectWeaponFromInventory(weaponType) {
         this.player.equipWeaponFromInventory(weaponType);
         // Refresh inventory display
+        const availableKills = this.totalKills + this.kills - this.killsSpentOnUpgrades;
         UI.showInventory(
             this.player.getInventory(),
             this.player.getWeaponType(),
-            (wt) => this.selectWeaponFromInventory(wt)
+            (wt) => this.selectWeaponFromInventory(wt),
+            this.player.getUpgradeLevel(),
+            availableKills,
+            () => this.tryUpgrade()
         );
+    }
+
+    tryUpgrade() {
+        const availableKills = this.totalKills + this.kills - this.killsSpentOnUpgrades;
+        if (availableKills >= 100 && this.player.getUpgradeLevel() < 3) {
+            this.killsSpentOnUpgrades += 100;
+            this.player.applyUpgrade();
+            const level = this.player.getUpgradeLevel();
+            const descriptions = {
+                1: 'Fire Rate +20%',
+                2: 'Damage +25%',
+                3: 'Fire Rate +20%'
+            };
+            Effects.addText(this.player.x, this.player.y - 40, `UPGRADE: ${descriptions[level]}!`, '#00ffcc', 1.5, 18);
+            // Refresh inventory
+            this.openInventory();
+        }
     }
 
     // Check if player is hit by enemy bullets

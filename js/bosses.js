@@ -125,7 +125,7 @@ class BigBernie extends Boss {
         this.maxHealth = 30;
         this.radius = 50;
         this.hitRadius = 50;
-        this.speed = 30;
+        this.speed = 36;
         this.color = Colors.bosses.bigBernie;
         this.points = 500;
         this.spawnCooldown = 4;
@@ -249,8 +249,8 @@ class SprintSally extends Boss {
     constructor(x, y) {
         super(x, y);
         this.name = 'SPRINT SALLY';
-        this.health = 35;
-        this.maxHealth = 35;
+        this.health = 23;
+        this.maxHealth = 23;
         this.radius = 25;
         this.hitRadius = 25;
         this.speed = 255; // 15% slower (was 300)
@@ -416,7 +416,7 @@ class SkyReaper extends Boss {
         this.maxHealth = 45;
         this.radius = 40;
         this.hitRadius = 35;
-        this.speed = 100;
+        this.speed = 120;
         this.color = Colors.bosses.skyReaper;
         this.points = 750;
         this.altitude = 60;
@@ -615,8 +615,8 @@ class RageKing extends Boss {
         this.maxHealth = 60;
         this.radius = 55;
         this.hitRadius = 50;
-        this.speed = 40;
-        this.chargeSpeed = 400;
+        this.speed = 48;
+        this.chargeSpeed = 480;
         this.color = Colors.bosses.rageKing;
         this.points = 900;
         this.state = 'approach';
@@ -766,8 +766,8 @@ class MonsterTruckMike extends Boss {
         this.maxHealth = 75;
         this.radius = 60;
         this.hitRadius = 55;
-        this.speed = 60;
-        this.chargeSpeed = 350;
+        this.speed = 72;
+        this.chargeSpeed = 420;
         this.color = Colors.bosses.monsterTruck;
         this.points = 1000;
         this.state = 'patrol';
@@ -920,7 +920,7 @@ class ChopperCommander extends Boss {
         this.maxHealth = 80;
         this.radius = 50;
         this.hitRadius = 45;
-        this.speed = 120;
+        this.speed = 144;
         this.color = Colors.bosses.chopperCommander;
         this.points = 1200;
         this.rotorAngle = 0;
@@ -1027,7 +1027,7 @@ class HordeMaster extends Boss {
         this.maxHealth = 50;
         this.radius = 45;
         this.hitRadius = 45;
-        this.speed = 60;
+        this.speed = 72;
         this.color = Colors.bosses.hordeMaster;
         this.points = 1500;
         this.splitCount = 0;
@@ -1147,7 +1147,7 @@ class TacticalNightmare extends Boss {
         this.maxHealth = 100;
         this.radius = 50;
         this.hitRadius = 45;
-        this.speed = 50;
+        this.speed = 60;
         this.color = Colors.bosses.tacticalNightmare;
         this.points = 2000;
         this.teleportCooldown = 0;
@@ -1259,7 +1259,7 @@ class ChaosIncarnate extends Boss {
         this.maxHealth = 120;
         this.radius = 45;
         this.hitRadius = 40;
-        this.speed = 80;
+        this.speed = 96;
         this.color = Colors.bosses.chaosIncarnate;
         this.points = 2500;
         this.currentForm = 0;
@@ -1457,7 +1457,7 @@ class OmegaZombie extends Boss {
         this.maxHealth = 200;
         this.radius = 70;
         this.hitRadius = 65;
-        this.speed = 60;
+        this.speed = 72;
         this.color = Colors.bosses.omega;
         this.points = 5000;
 

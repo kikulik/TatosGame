@@ -17,6 +17,9 @@ class Player {
         // Inventory system - weapons the player has collected
         this.inventory = ['pistol']; // Always start with pistol
 
+        // Upgrade system
+        this.upgradeLevel = 0; // 0-3
+
         // Dash system
         this.dashCooldown = 0;
         this.dashMaxCooldown = 10; // 10 seconds cooldown
@@ -66,8 +69,9 @@ class Player {
             // Full reset - new game
             this.inventory = ['pistol'];
             this.weapon.setType('pistol');
+            this.upgradeLevel = 0;
         }
-        // If keepInventory is true, keep current weapon and inventory
+        // If keepInventory is true, keep current weapon, inventory, and upgrades
     }
 
     // Dash to mouse position
@@ -135,6 +139,32 @@ class Player {
 
     getWeaponType() {
         return this.weapon.type;
+    }
+
+    // Upgrade system
+    getUpgradeLevel() {
+        return this.upgradeLevel;
+    }
+
+    applyUpgrade() {
+        if (this.upgradeLevel < 3) {
+            this.upgradeLevel++;
+            return true;
+        }
+        return false;
+    }
+
+    getFireRateMultiplier() {
+        let mult = 1;
+        if (this.upgradeLevel >= 1) mult *= 0.8; // Level 1: 20% faster
+        if (this.upgradeLevel >= 3) mult *= 0.8; // Level 3: 20% faster again
+        return mult;
+    }
+
+    getDamageMultiplier() {
+        let mult = 1;
+        if (this.upgradeLevel >= 2) mult *= 1.25; // Level 2: 25% more damage
+        return mult;
     }
 
     handleKeyDown(key) {
@@ -279,7 +309,7 @@ class Player {
 
         if (this.shooting && this.fireCooldown <= 0) {
             this.shoot(bulletManager);
-            this.fireCooldown = this.weapon.fireRate;
+            this.fireCooldown = this.weapon.fireRate * this.getFireRateMultiplier();
         }
     }
 
@@ -289,7 +319,15 @@ class Player {
         const gunTipY = this.y + Math.sin(this.angle) * this.gunLength;
 
         // Use weapon to shoot - pass target for rockets to explode at click location
-        this.weapon.shoot(gunTipX, gunTipY, this.angle, bulletManager, this.targetX, this.targetY);
+        const bullets = this.weapon.shoot(gunTipX, gunTipY, this.angle, bulletManager, this.targetX, this.targetY);
+
+        // Apply upgrade damage multiplier
+        const damageMult = this.getDamageMultiplier();
+        if (damageMult !== 1 && bullets) {
+            for (const bullet of bullets) {
+                if (bullet) bullet.damage *= damageMult;
+            }
+        }
 
         // Muzzle flash particle
         Particles.muzzleFlash(gunTipX, gunTipY, this.angle);
@@ -365,6 +403,33 @@ class Player {
                 // Magazine
                 ctx.fillStyle = '#333';
                 ctx.fillRect(this.radius + 2, 3, 6, 8);
+                break;
+
+            case 'bow':
+                // Bow weapon
+                ctx.strokeStyle = '#5a3a1a';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(this.radius + 5, 0, 14, -1.2, 1.2);
+                ctx.stroke();
+                // Bowstring
+                ctx.strokeStyle = '#aaa';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(this.radius + 5 + Math.cos(-1.2) * 14, Math.sin(-1.2) * 14);
+                ctx.lineTo(this.radius - 2, 0);
+                ctx.lineTo(this.radius + 5 + Math.cos(1.2) * 14, Math.sin(1.2) * 14);
+                ctx.stroke();
+                // Arrow
+                ctx.fillStyle = '#88cc44';
+                ctx.fillRect(this.radius - 2, -1, 20, 2);
+                // Arrowhead
+                ctx.beginPath();
+                ctx.moveTo(this.radius + 20, 0);
+                ctx.lineTo(this.radius + 15, -3);
+                ctx.lineTo(this.radius + 15, 3);
+                ctx.closePath();
+                ctx.fill();
                 break;
 
             case 'shotgun':
