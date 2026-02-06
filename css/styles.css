@@ -479,6 +479,83 @@ body {
     font-weight: bold;
 }
 
+/* Upgrade Section */
+#upgrade-section {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #444;
+}
+
+.upgrade-header {
+    color: #00ffcc;
+    font-weight: bold;
+    font-size: 1.1em;
+    text-align: center;
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+}
+
+.upgrade-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.upgrade-active {
+    color: #00ff88;
+    font-size: 0.9em;
+    text-align: center;
+}
+
+.upgrade-none {
+    color: #666;
+    font-size: 0.9em;
+    text-align: center;
+}
+
+.upgrade-kills {
+    color: #ffcc00;
+    font-size: 0.9em;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.upgrade-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    font-size: 0.95em;
+    font-weight: bold;
+    border: 2px solid #00ffcc;
+    border-radius: 5px;
+    background: linear-gradient(180deg, #1a4a3a 0%, #0a2a2a 100%);
+    color: #00ffcc;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.upgrade-btn:hover {
+    background: linear-gradient(180deg, #2a6a5a 0%, #1a4a3a 100%);
+    box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
+}
+
+.upgrade-btn.locked {
+    border-color: #555;
+    color: #555;
+    background: #222;
+    cursor: not-allowed;
+}
+
+.upgrade-btn.maxed {
+    border-color: #FFD700;
+    color: #FFD700;
+    background: linear-gradient(180deg, #3a3a1a 0%, #2a2a0a 100%);
+    cursor: default;
+}
+
 /* Mobile Warning */
 @media (max-width: 768px) {
     .menu h1 {

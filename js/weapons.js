@@ -47,10 +47,25 @@ const WeaponTypes = {
         range: 400,
         soundType: 'shotgun'
     },
+    bow: {
+        name: 'Bow',
+        fireRate: 0.5,
+        damage: 1.5,
+        speed: 650,
+        bulletSize: 5,
+        spread: 0,
+        bulletsPerShot: 1,
+        color: '#88cc44',
+        trailColor: 'rgba(136, 204, 68, 0.8)',
+        isExplosive: false,
+        isFlame: false,
+        range: 550,
+        soundType: 'bow'
+    },
     rocketLauncher: {
         name: 'Rocket Launcher',
         fireRate: 1.2,
-        damage: 2, // 2x damage of normal gun
+        damage: 3,
         speed: 400,
         bulletSize: 10,
         spread: 0,
@@ -58,7 +73,7 @@ const WeaponTypes = {
         color: '#ff0000',
         trailColor: 'rgba(255, 100, 0, 0.9)',
         isExplosive: true,
-        explosionRadius: 100,
+        explosionRadius: 150,
         isFlame: false,
         range: Infinity,
         soundType: 'rocket'
@@ -236,27 +251,30 @@ class Weapon {
     }
 }
 
-// Loot drop probabilities (must sum to 100)
+// Loot drop probabilities (relative weights)
 const WeaponDropRates = {
-    shotgun: 41,
-    uzi: 31,
+    shotgun: 25,
+    bow: 20,
     rocketLauncher: 15,
-    flamethrower: 8, // 8% drop chance
-    doubleMinigun: 3,
-    tripleMinigun: 2 // 2% drop chance (rare!)
+    uzi: 15,
+    flamethrower: 8,
+    doubleMinigun: 5,
+    tripleMinigun: 2
 };
 
 // Function to get random weapon from loot box
 function getRandomWeaponDrop() {
-    const roll = Utils.random(0, 100);
+    const entries = Object.entries(WeaponDropRates);
+    const total = entries.reduce((sum, [, rate]) => sum + rate, 0);
+    const roll = Utils.random(0, total);
     let cumulative = 0;
 
-    for (const [weapon, rate] of Object.entries(WeaponDropRates)) {
+    for (const [weapon, rate] of entries) {
         cumulative += rate;
         if (roll < cumulative) {
             return weapon;
         }
     }
 
-    return 'shotgun'; // Fallback
+    return entries[0][0]; // Fallback
 }

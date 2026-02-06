@@ -78,6 +78,9 @@ class AudioSystem {
             case 'minigun':
                 this.playMinigunSound();
                 break;
+            case 'bow':
+                this.playBowSound();
+                break;
             default:
                 this.playShoot();
         }
@@ -192,6 +195,27 @@ class AudioSystem {
 
         osc.start(this.audioContext.currentTime);
         osc.stop(this.audioContext.currentTime + 0.02);
+    }
+
+    // Bow sound - twang
+    playBowSound() {
+        if (!this.enabled || !this.initialized) return;
+
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(600, this.audioContext.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(150, this.audioContext.currentTime + 0.12);
+
+        gain.gain.setValueAtTime(this.sfxVolume * 0.3, this.audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.12);
+
+        osc.start(this.audioContext.currentTime);
+        osc.stop(this.audioContext.currentTime + 0.12);
     }
 
     // Weapon pickup sound
