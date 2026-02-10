@@ -225,6 +225,8 @@ class UIManager {
             if (upgradeLevel >= 2) activeUpgrades += '<span class="upgrade-active">Lv2: Damage +25%</span>';
             if (upgradeLevel >= 3) activeUpgrades += '<span class="upgrade-active">Lv3: Bow: Double Arrow</span>';
 
+            const canPlaceTower = availableKills >= 300;
+
             upgradeContainer.innerHTML = `
                 <div class="upgrade-header">UPGRADES (Level ${upgradeLevel}/3)</div>
                 <div class="upgrade-info">${activeUpgrades || '<span class="upgrade-none">No upgrades yet</span>'}</div>
@@ -234,22 +236,16 @@ class UIManager {
                         UPGRADE Lv${nextLevel} (${nextCost} kills) - ${upgradeDescriptions[nextLevel]}
                     </button>`
                 }
-            `;
-
-            if (canUpgrade && onUpgrade) {
-                upgradeContainer.querySelector('.upgrade-btn').addEventListener('click', onUpgrade);
-            }
-
-            // Tower section
-            const canPlaceTower = availableKills >= 300;
-            const towerHtml = `
                 <div class="upgrade-header" style="margin-top: 10px;">TOWER (Press T)</div>
                 <div class="upgrade-info"><span class="upgrade-none">Auto-shoots zombies for 30s. Never misses.</span></div>
                 <button class="upgrade-btn tower-btn ${canPlaceTower ? '' : 'locked'}" ${canPlaceTower ? '' : 'disabled'}>
                     PLACE TOWER (300 kills)
                 </button>
             `;
-            upgradeContainer.innerHTML += towerHtml;
+
+            if (canUpgrade && onUpgrade) {
+                upgradeContainer.querySelector('.upgrade-btn:not(.tower-btn)').addEventListener('click', onUpgrade);
+            }
 
             if (canPlaceTower && onPlaceTower) {
                 upgradeContainer.querySelector('.tower-btn').addEventListener('click', onPlaceTower);
