@@ -128,8 +128,8 @@ class BigBernie extends Boss {
     constructor(x, y) {
         super(x, y);
         this.name = 'BIG BERNIE';
-        this.health = 150;
-        this.maxHealth = 150;
+        this.health = 113;
+        this.maxHealth = 113;
         this.radius = 50;
         this.hitRadius = 50;
         this.speed = 40;
@@ -322,8 +322,8 @@ class SprintSally extends Boss {
     constructor(x, y) {
         super(x, y);
         this.name = 'SPRINT SALLY';
-        this.health = 120;
-        this.maxHealth = 120;
+        this.health = 90;
+        this.maxHealth = 90;
         this.radius = 25;
         this.hitRadius = 25;
         this.speed = 255;
@@ -497,8 +497,8 @@ class SkyReaper extends Boss {
     constructor(x, y) {
         super(x, y);
         this.name = 'SKY REAPER';
-        this.health = 200;
-        this.maxHealth = 200;
+        this.health = 150;
+        this.maxHealth = 150;
         this.radius = 40;
         this.hitRadius = 35;
         this.speed = 120;
@@ -689,8 +689,8 @@ class RageKing extends Boss {
     constructor(x, y) {
         super(x, y);
         this.name = 'RAGE KING';
-        this.health = 300;
-        this.maxHealth = 300;
+        this.health = 225;
+        this.maxHealth = 225;
         this.radius = 55;
         this.hitRadius = 50;
         this.speed = 48;
@@ -880,8 +880,8 @@ class MonsterTruckMike extends Boss {
     constructor(x, y) {
         super(x, y);
         this.name = 'MONSTER TRUCK MIKE';
-        this.health = 400;
-        this.maxHealth = 400;
+        this.health = 300;
+        this.maxHealth = 300;
         this.radius = 60;
         this.hitRadius = 55;
         this.speed = 72;
@@ -1051,8 +1051,8 @@ class ChopperCommander extends Boss {
     constructor(x, y) {
         super(x, y);
         this.name = 'CHOPPER COMMANDER';
-        this.health = 500;
-        this.maxHealth = 500;
+        this.health = 375;
+        this.maxHealth = 375;
         this.radius = 50;
         this.hitRadius = 45;
         this.speed = 144;
@@ -1198,8 +1198,8 @@ class HordeMaster extends Boss {
     constructor(x, y) {
         super(x, y);
         this.name = 'HORDE MASTER';
-        this.health = 350;
-        this.maxHealth = 350;
+        this.health = 263;
+        this.maxHealth = 263;
         this.radius = 45;
         this.hitRadius = 45;
         this.speed = 72;
@@ -1346,8 +1346,8 @@ class TacticalNightmare extends Boss {
     constructor(x, y) {
         super(x, y);
         this.name = 'TACTICAL NIGHTMARE';
-        this.health = 600;
-        this.maxHealth = 600;
+        this.health = 450;
+        this.maxHealth = 450;
         this.radius = 50;
         this.hitRadius = 45;
         this.speed = 60;
@@ -1498,8 +1498,8 @@ class ChaosIncarnate extends Boss {
     constructor(x, y) {
         super(x, y);
         this.name = 'CHAOS INCARNATE';
-        this.health = 800;
-        this.maxHealth = 800;
+        this.health = 600;
+        this.maxHealth = 600;
         this.radius = 45;
         this.hitRadius = 40;
         this.speed = 96;
@@ -1686,8 +1686,8 @@ class OmegaZombie extends Boss {
     constructor(x, y) {
         super(x, y);
         this.name = 'THE OMEGA ZOMBIE';
-        this.health = 1200;
-        this.maxHealth = 1200;
+        this.health = 900;
+        this.maxHealth = 900;
         this.radius = 70;
         this.hitRadius = 65;
         this.speed = 72;
@@ -2031,7 +2031,10 @@ class BossManager {
             if (!bullet.active) continue;
             if (Utils.circleCollision(bullet.x, bullet.y, bullet.radius, this.boss.x, this.boss.y, this.boss.hitRadius)) {
                 Particles.sparks(bullet.x, bullet.y, bullet.angle, 8);
-                bullet.active = false;
+                // Bow arrows pierce through enemies
+                if (bullet.weaponType !== 'bow') {
+                    bullet.active = false;
+                }
                 if (this.boss.takeDamage(bullet.damage)) {
                     const result = { points: this.boss.points, name: this.boss.name };
                     this.boss = null;

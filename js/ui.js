@@ -177,7 +177,7 @@ class UIManager {
     }
 
     // Inventory panel
-    showInventory(inventory, currentWeapon, onSelectWeapon, upgradeLevel = 0, availableKills = 0, onUpgrade = null) {
+    showInventory(inventory, currentWeapon, onSelectWeapon, upgradeLevel = 0, availableKills = 0, onUpgrade = null, onPlaceTower = null) {
         this.inventoryOpen = true;
         const container = this.elements.inventoryWeapons;
         if (!container) return;
@@ -212,16 +212,18 @@ class UIManager {
             const upgradeDescriptions = {
                 1: 'Fire Rate +20%',
                 2: 'Damage +25%',
-                3: 'Fire Rate +20%'
+                3: 'Bow: Double Arrow'
             };
             const nextLevel = upgradeLevel + 1;
-            const canUpgrade = upgradeLevel < 3 && availableKills >= 100;
+            const upgradeCosts = { 1: 80, 2: 120, 3: 150 };
+            const nextCost = upgradeCosts[nextLevel] || 100;
+            const canUpgrade = upgradeLevel < 3 && availableKills >= nextCost;
             const maxed = upgradeLevel >= 3;
 
             let activeUpgrades = '';
             if (upgradeLevel >= 1) activeUpgrades += '<span class="upgrade-active">Lv1: Fire Rate +20%</span>';
             if (upgradeLevel >= 2) activeUpgrades += '<span class="upgrade-active">Lv2: Damage +25%</span>';
-            if (upgradeLevel >= 3) activeUpgrades += '<span class="upgrade-active">Lv3: Fire Rate +20%</span>';
+            if (upgradeLevel >= 3) activeUpgrades += '<span class="upgrade-active">Lv3: Bow: Double Arrow</span>';
 
             upgradeContainer.innerHTML = `
                 <div class="upgrade-header">UPGRADES (Level ${upgradeLevel}/3)</div>
@@ -229,13 +231,28 @@ class UIManager {
                 <div class="upgrade-kills">Available Kills: ${availableKills}</div>
                 ${maxed ? '<button class="upgrade-btn maxed" disabled>MAX LEVEL</button>' :
                     `<button class="upgrade-btn ${canUpgrade ? '' : 'locked'}" ${canUpgrade ? '' : 'disabled'}>
-                        UPGRADE Lv${nextLevel} (100 kills) - ${upgradeDescriptions[nextLevel]}
+                        UPGRADE Lv${nextLevel} (${nextCost} kills) - ${upgradeDescriptions[nextLevel]}
                     </button>`
                 }
             `;
 
             if (canUpgrade && onUpgrade) {
                 upgradeContainer.querySelector('.upgrade-btn').addEventListener('click', onUpgrade);
+            }
+
+            // Tower section
+            const canPlaceTower = availableKills >= 300;
+            const towerHtml = `
+                <div class="upgrade-header" style="margin-top: 10px;">TOWER (Press T)</div>
+                <div class="upgrade-info"><span class="upgrade-none">Auto-shoots zombies for 30s. Never misses.</span></div>
+                <button class="upgrade-btn tower-btn ${canPlaceTower ? '' : 'locked'}" ${canPlaceTower ? '' : 'disabled'}>
+                    PLACE TOWER (300 kills)
+                </button>
+            `;
+            upgradeContainer.innerHTML += towerHtml;
+
+            if (canPlaceTower && onPlaceTower) {
+                upgradeContainer.querySelector('.tower-btn').addEventListener('click', onPlaceTower);
             }
         }
 

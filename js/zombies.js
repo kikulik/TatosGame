@@ -1270,8 +1270,11 @@ class ZombieManager {
                         break;
                     }
 
-                    bullet.active = false;
-                    bulletHit = true;
+                    // Bow arrows pierce through enemies
+                    if (bullet.weaponType !== 'bow') {
+                        bullet.active = false;
+                        bulletHit = true;
+                    }
 
                     // Apply afterburn effect if bullet has it (flamethrower)
                     if (bullet.hasAfterburn && zombie.alive) {
@@ -1292,7 +1295,7 @@ class ZombieManager {
                             lootBoxManager.trySpawn(zombie.x, zombie.y);
                         }
                     }
-                    break;
+                    if (bullet.weaponType !== 'bow') break;
                 }
             }
         }
