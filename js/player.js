@@ -157,7 +157,6 @@ class Player {
     getFireRateMultiplier() {
         let mult = 1;
         if (this.upgradeLevel >= 1) mult *= 0.8; // Level 1: 20% faster
-        if (this.upgradeLevel >= 3) mult *= 0.8; // Level 3: 20% faster again
         return mult;
     }
 
@@ -320,6 +319,13 @@ class Player {
 
         // Use weapon to shoot - pass target for rockets to explode at click location
         const bullets = this.weapon.shoot(gunTipX, gunTipY, this.angle, bulletManager, this.targetX, this.targetY);
+
+        // Level 3 upgrade: bow shoots a second arrow with slight spread
+        if (this.upgradeLevel >= 3 && this.weapon.type === 'bow') {
+            const spreadAngle = this.angle + 0.15;
+            const extraBullets = this.weapon.shoot(gunTipX, gunTipY, spreadAngle, bulletManager, this.targetX, this.targetY);
+            if (extraBullets) bullets.push(...extraBullets);
+        }
 
         // Apply upgrade damage multiplier
         const damageMult = this.getDamageMultiplier();

@@ -21,6 +21,7 @@ class Game {
         this.levelManager = null;
         this.lootBoxManager = null;
         this.wallManager = null;
+        this.towerManager = null;
 
         // Score tracking
         this.score = 0;
@@ -70,6 +71,7 @@ class Game {
         this.levelManager = new LevelManager();
         this.lootBoxManager = new LootBoxManager();
         this.wallManager = new WallManager();
+        this.towerManager = new TowerManager();
 
         // Setup input handlers
         this.setupInputHandlers();
@@ -174,6 +176,11 @@ class Game {
                     this.tryPickupLoot();
                 }
 
+                // Place tower with T
+                if (e.code === 'KeyT') {
+                    this.tryPlaceTower();
+                }
+
                 if (e.code === 'Space') {
                     this.pause();
                 }
@@ -244,6 +251,7 @@ class Game {
         this.bossManager.clear();
         this.lootBoxManager.clear();
         this.wallManager.clear();
+        this.towerManager.clear();
         Particles.clear();
         Effects.clear();
 
@@ -319,7 +327,8 @@ class Game {
             (weaponType) => this.selectWeaponFromInventory(weaponType),
             this.player.getUpgradeLevel(),
             availableKills,
-            () => this.tryUpgrade()
+            () => this.tryUpgrade(),
+            () => { this.tryPlaceTower(); }
         );
     }
 
@@ -338,24 +347,46 @@ class Game {
             (wt) => this.selectWeaponFromInventory(wt),
             this.player.getUpgradeLevel(),
             availableKills,
-            () => this.tryUpgrade()
+            () => this.tryUpgrade(),
+            () => { this.tryPlaceTower(); }
         );
+    }
+
+    getUpgradeCost(level) {
+        const costs = { 1: 80, 2: 120, 3: 150 };
+        return costs[level] || 100;
     }
 
     tryUpgrade() {
         const availableKills = this.totalKills + this.kills - this.killsSpentOnUpgrades;
-        if (availableKills >= 100 && this.player.getUpgradeLevel() < 3) {
-            this.killsSpentOnUpgrades += 100;
+        const nextLevel = this.player.getUpgradeLevel() + 1;
+        const cost = this.getUpgradeCost(nextLevel);
+        if (availableKills >= cost && this.player.getUpgradeLevel() < 3) {
+            this.killsSpentOnUpgrades += cost;
             this.player.applyUpgrade();
             const level = this.player.getUpgradeLevel();
             const descriptions = {
                 1: 'Fire Rate +20%',
                 2: 'Damage +25%',
-                3: 'Fire Rate +20%'
+                3: 'Bow: Double Arrow'
             };
             Effects.addText(this.player.x, this.player.y - 40, `UPGRADE: ${descriptions[level]}!`, '#00ffcc', 1.5, 18);
             // Refresh inventory
             this.openInventory();
+        }
+    }
+
+    tryPlaceTower() {
+        const availableKills = this.totalKills + this.kills - this.killsSpentOnUpgrades;
+        if (availableKills >= 300 && this.player.alive) {
+            this.killsSpentOnUpgrades += 300;
+            this.towerManager.placeTower(this.player.x, this.player.y);
+            // Refresh inventory if open
+            if (this.inventoryOpen) {
+                this.openInventory();
+            }
+        } else if (this.player.alive) {
+            Effects.addText(this.player.x, this.player.y - 40, 'Need 300 kills!', '#ff4444', 1, 14);
         }
     }
 
@@ -570,6 +601,9 @@ class Game {
         // Update boss
         this.bossManager.update(dt, this.player.x, this.player.y);
 
+        // Update towers
+        this.towerManager.update(dt, this.zombieManager, this.bossManager, this.bulletManager);
+
         // Check bullet-zombie collisions (with explosive support)
         const zombieKills = this.zombieManager.checkBulletCollisions(this.bulletManager, this.lootBoxManager);
         for (const kill of zombieKills) {
@@ -700,6 +734,7 @@ class Game {
             this.lootBoxManager.draw(ctx);
             this.zombieManager.draw(ctx);
             this.bossManager.draw(ctx);
+            this.towerManager.draw(ctx);
             this.player.draw(ctx);
             this.bulletManager.draw(ctx);
 
