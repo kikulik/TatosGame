@@ -301,9 +301,16 @@ class EffectsSystem {
 
             if (effect.type === 'shockwave') {
                 ctx.save();
+                // Outer glow ring
                 ctx.strokeStyle = effect.color;
-                ctx.globalAlpha = alpha * 0.7;
-                ctx.lineWidth = 3;
+                ctx.globalAlpha = alpha * 0.3;
+                ctx.lineWidth = 8;
+                ctx.beginPath();
+                ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
+                ctx.stroke();
+                // Sharp inner ring
+                ctx.globalAlpha = alpha * 0.8;
+                ctx.lineWidth = 2;
                 ctx.beginPath();
                 ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
                 ctx.stroke();
@@ -317,9 +324,13 @@ class EffectsSystem {
             } else if (effect.type === 'text') {
                 ctx.save();
                 ctx.globalAlpha = alpha;
-                ctx.fillStyle = effect.color;
                 ctx.font = `bold ${effect.size}px Arial`;
                 ctx.textAlign = 'center';
+                // Text shadow for readability
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+                ctx.fillText(effect.text, effect.x + 2, effect.y + 2);
+                // Main text
+                ctx.fillStyle = effect.color;
                 ctx.fillText(effect.text, effect.x, effect.y);
                 ctx.restore();
             }

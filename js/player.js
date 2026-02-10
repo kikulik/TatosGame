@@ -352,6 +352,29 @@ class Player {
     draw(ctx) {
         if (!this.alive) return;
 
+        // Player glow effect
+        ctx.save();
+        const glowSize = this.radius * 2.5;
+        const glowGrad = ctx.createRadialGradient(this.x, this.y, this.radius * 0.5, this.x, this.y, glowSize);
+        glowGrad.addColorStop(0, 'rgba(0, 255, 0, 0.12)');
+        glowGrad.addColorStop(1, 'rgba(0, 255, 0, 0)');
+        ctx.fillStyle = glowGrad;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, glowSize, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Dash trail afterimage
+        if (this.isDashing) {
+            ctx.save();
+            ctx.globalAlpha = 0.3;
+            ctx.fillStyle = '#00ffff';
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius + 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle);
@@ -366,6 +389,12 @@ class Player {
         ctx.strokeStyle = '#006600';
         ctx.lineWidth = 2;
         ctx.stroke();
+
+        // Inner body highlight
+        ctx.fillStyle = 'rgba(100, 255, 100, 0.25)';
+        ctx.beginPath();
+        ctx.arc(-3, -3, this.radius * 0.5, 0, Math.PI * 2);
+        ctx.fill();
 
         // Draw gun based on weapon type
         this.drawWeapon(ctx);

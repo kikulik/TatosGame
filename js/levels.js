@@ -199,7 +199,7 @@ const LevelConfig = {
             { type: 'runner', weight: 12 },
             { type: 'flying', weight: 12 },
             { type: 'berserker', weight: 14 },
-            { type: 'car', weight: 3 }, // Reduced - cars are rare
+            { type: 'car', weight: 3 },
             { type: 'jumper', weight: 12 },
             { type: 'helicopter', weight: 8 },
             { type: 'diveBomber', weight: 10 },
@@ -207,16 +207,16 @@ const LevelConfig = {
             { type: 'teleporter', weight: 6 },
             { type: 'shielded', weight: 6 }
         ],
-        spawnInterval: 0.15, // 3-4 every 0.5 seconds
-        spawnCount: 3,
-        enableCloseSpawns: true,
+        spawnInterval: 0.7,
+        spawnCount: 2,
+        enableCloseSpawns: false,
         enableSwarms: true,
-        finalRush: true, // Double spawn rate in final 30 seconds
+        finalRush: true,
         bossSpawnTime: 50,
         description: [
             'EVERY zombie type simultaneously',
-            'Multiple vehicles and helicopters',
-            'Final 30 seconds: spawn rate DOUBLES',
+            'Swarm waves of mixed zombies',
+            'Final 30 seconds: spawn rate increases',
             'Boss: The Omega Zombie - ALL abilities combined'
         ]
     }
@@ -276,19 +276,34 @@ class LevelManager {
 
         // Spawn boss
         if (!this.bossSpawned && this.timeRemaining <= LEVEL_DURATION - config.bossSpawnTime) {
+            // Kill all existing mobs dramatically - boss takes the stage
+            zombieManager.killAllDramatically();
+            Effects.addFlash(0.4, 'rgba(255, 0, 0, 0.6)');
+            Utils.screenShake.shake(20, 1.0);
+            Effects.addText(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 80, 'BOSS INCOMING!', '#ff0000', 2.5, 40);
+
             bossManager.spawn(this.currentLevel, player.x, player.y);
             this.bossSpawned = true;
         }
 
-        // Regular zombie spawning
+        // Stop regular zombie spawning once boss is active (boss-only arena)
+        if (this.bossSpawned && bossManager.isAlive()) {
+            // Only spawn boss minions, no regular mobs
+            const minions = bossManager.getMinionsToSpawn();
+            for (const minion of minions) {
+                zombieManager.spawn(minion.type, minion.x, minion.y, player.x, player.y);
+            }
+            return null;
+        }
+
+        // Regular zombie spawning (only before boss)
         let spawnInterval = config.spawnInterval;
 
-        // Reduce spawn rate by 10% per zombie type
-        // (e.g., 5 types = 50% fewer spawns)
+        // Slightly increase spawn interval for levels with many zombie types
         const zombieTypeCount = config.zombieTypes.length;
-        const typeReduction = zombieTypeCount * 0.1; // 10% per type
-        if (typeReduction > 0 && typeReduction < 1) {
-            spawnInterval *= 1 / (1 - typeReduction);
+        if (zombieTypeCount > 3) {
+            const typeBonus = Math.min((zombieTypeCount - 3) * 0.05, 0.4);
+            spawnInterval *= 1 + typeBonus;
         }
 
         // Final rush for level 10

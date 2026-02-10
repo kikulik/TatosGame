@@ -82,7 +82,7 @@ const Utils = {
     },
 
     // Get random position around player (for close spawns)
-    getCloseSpawnPosition(playerX, playerY, minDist = 150, maxDist = 250) {
+    getCloseSpawnPosition(playerX, playerY, minDist = 250, maxDist = 400) {
         const angle = this.random(0, Math.PI * 2);
         const dist = this.random(minDist, maxDist);
         return {
@@ -229,5 +229,19 @@ const Colors = {
         explosion: ['#FF4500', '#FF6347', '#FFA500', '#FFD700'],
         smoke: ['#696969', '#808080', '#A9A9A9'],
         spark: ['#FFD700', '#FFA500', '#FF4500']
+    },
+
+    // Level-themed environment colors
+    levelThemes: {
+        1:  { bg: '#111a11', grid: 'rgba(30, 70, 30, 0.3)', vignette: 'rgba(0, 20, 0, 0.6)', ambient: '#2a5a2a', ambientAlt: '#1a3a1a', name: 'forest' },
+        2:  { bg: '#1a1a11', grid: 'rgba(70, 70, 30, 0.3)', vignette: 'rgba(20, 20, 0, 0.6)', ambient: '#5a5a2a', ambientAlt: '#3a3a1a', name: 'dusk' },
+        3:  { bg: '#111118', grid: 'rgba(30, 30, 80, 0.3)', vignette: 'rgba(0, 0, 30, 0.6)', ambient: '#3a3a7a', ambientAlt: '#2a2a5a', name: 'night' },
+        4:  { bg: '#1a1111', grid: 'rgba(80, 30, 30, 0.3)', vignette: 'rgba(30, 0, 0, 0.6)', ambient: '#7a2a2a', ambientAlt: '#5a1a1a', name: 'rage' },
+        5:  { bg: '#151515', grid: 'rgba(60, 60, 60, 0.3)', vignette: 'rgba(10, 10, 10, 0.6)', ambient: '#555555', ambientAlt: '#333333', name: 'urban' },
+        6:  { bg: '#0f1520', grid: 'rgba(30, 50, 80, 0.3)', vignette: 'rgba(0, 10, 30, 0.7)', ambient: '#2a4a7a', ambientAlt: '#1a3060', name: 'sky' },
+        7:  { bg: '#1a0f0f', grid: 'rgba(70, 25, 25, 0.3)', vignette: 'rgba(25, 0, 0, 0.7)', ambient: '#6a2020', ambientAlt: '#4a1010', name: 'horde' },
+        8:  { bg: '#0f0f1a', grid: 'rgba(40, 30, 80, 0.3)', vignette: 'rgba(10, 0, 30, 0.7)', ambient: '#4a2a8a', ambientAlt: '#2a1a5a', name: 'tactical' },
+        9:  { bg: '#1a0a1a', grid: 'rgba(80, 20, 80, 0.3)', vignette: 'rgba(30, 0, 30, 0.7)', ambient: '#8a2a8a', ambientAlt: '#5a1a5a', name: 'chaos' },
+        10: { bg: '#0a0a0a', grid: 'rgba(80, 60, 10, 0.25)', vignette: 'rgba(0, 0, 0, 0.8)', ambient: '#aa7700', ambientAlt: '#773300', name: 'apocalypse' }
     }
 };
