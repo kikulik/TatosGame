@@ -322,16 +322,16 @@ class SprintSally extends Boss {
     constructor(x, y) {
         super(x, y);
         this.name = 'SPRINT SALLY';
-        this.health = 90;
-        this.maxHealth = 90;
+        this.health = 75;
+        this.maxHealth = 75;
         this.radius = 25;
         this.hitRadius = 25;
-        this.speed = 255;
+        this.speed = 170;
         this.color = Colors.bosses.sprintSally;
         this.points = 600;
         this.circleAngle = 0;
         this.circleRadius = 200;
-        this.circleSpeed = 2.55;
+        this.circleSpeed = 2.0;
         // Speed Dash
         this.dashCooldown = 0;
         this.isDashing = false;
@@ -387,8 +387,8 @@ class SprintSally extends Boss {
         if (this.isDashing) {
             this.dashTimer += dt;
             if (Math.random() < 0.5) this.afterImages.push({ x: this.x, y: this.y, angle: this.angle, alpha: 0.7 });
-            this.x += Math.cos(this.dashAngle) * 700 * dt;
-            this.y += Math.sin(this.dashAngle) * 700 * dt;
+            this.x += Math.cos(this.dashAngle) * 500 * dt;
+            this.y += Math.sin(this.dashAngle) * 500 * dt;
             this.angle = this.dashAngle;
             Particles.trail(this.x, this.y, '#32CD32', 4);
             if (this.dashTimer > 0.35) {
@@ -405,7 +405,7 @@ class SprintSally extends Boss {
         }
 
         // Circle around player
-        this.circleSpeed = (2.55 + this.phase * 0.85) * this.phaseSpeedMult;
+        this.circleSpeed = (2.0 + this.phase * 0.6) * this.phaseSpeedMult;
         this.circleAngle += this.circleSpeed * dt;
         if (this.phase >= 2) this.circleRadius = 150 + Math.sin(this.stateTimer * 2) * 50;
 

@@ -60,6 +60,8 @@ class UIManager {
             inventoryWeapons: document.getElementById('inventory-weapons'),
             dashCooldownFill: document.getElementById('dash-cooldown-fill'),
             dashLabel: document.getElementById('dash-label'),
+            sprintFill: document.getElementById('sprint-fill'),
+            sprintLabel: document.getElementById('sprint-label'),
             playerNameDisplay: document.getElementById('player-name-display')
         };
 
@@ -172,6 +174,29 @@ class UIManager {
             } else {
                 this.elements.dashLabel.style.color = '#888';
                 this.elements.dashLabel.textContent = 'DASH [Q]';
+            }
+        }
+    }
+
+    // Sprint bar display
+    updateSprintBar(percent, isSprinting, isExhausted) {
+        if (this.elements.sprintFill) {
+            this.elements.sprintFill.style.width = `${percent * 100}%`;
+            this.elements.sprintFill.className = isExhausted ? 'exhausted' : (isSprinting ? 'sprinting' : '');
+        }
+        if (this.elements.sprintLabel) {
+            if (isExhausted) {
+                this.elements.sprintLabel.style.color = '#883300';
+                this.elements.sprintLabel.textContent = 'TIRED';
+            } else if (isSprinting) {
+                this.elements.sprintLabel.style.color = '#ffcc00';
+                this.elements.sprintLabel.textContent = 'SPRINTING!';
+            } else if (percent >= 1) {
+                this.elements.sprintLabel.style.color = '#ff8800';
+                this.elements.sprintLabel.textContent = 'SPRINT [SPACE]';
+            } else {
+                this.elements.sprintLabel.style.color = '#888';
+                this.elements.sprintLabel.textContent = 'SPRINT [SPACE]';
             }
         }
     }

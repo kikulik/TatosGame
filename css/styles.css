@@ -450,6 +450,45 @@ body {
     letter-spacing: 1px;
 }
 
+/* Sprint Bar */
+#sprint-container {
+    position: absolute;
+    bottom: 30px;
+    left: 130px;
+    text-align: center;
+}
+
+#sprint-bar {
+    width: 100px;
+    height: 10px;
+    background: #333;
+    border: 2px solid #ff8800;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+#sprint-fill {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #ff8800 0%, #ffcc00 100%);
+    transition: width 0.1s linear;
+}
+
+#sprint-fill.exhausted {
+    background: linear-gradient(90deg, #883300 0%, #aa5500 100%);
+}
+
+#sprint-fill.sprinting {
+    background: linear-gradient(90deg, #ffaa00 0%, #ffff00 100%);
+}
+
+#sprint-label {
+    color: #ff8800;
+    font-size: 0.8em;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
 /* Player Name Display */
 #player-name-display {
     position: absolute;

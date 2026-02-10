@@ -59,7 +59,7 @@ const WeaponTypes = {
         trailColor: 'rgba(136, 204, 68, 0.8)',
         isExplosive: false,
         isFlame: false,
-        range: 550,
+        range: Infinity,
         soundType: 'bow'
     },
     rocketLauncher: {

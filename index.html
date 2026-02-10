@@ -48,10 +48,11 @@
                 <p><span class="key">WASD</span> or <span class="key">Arrow Keys</span> - Move</p>
                 <p><span class="key">Mouse</span> - Aim</p>
                 <p><span class="key">Left Click</span> - Shoot</p>
-                <p><span class="key">Q</span> - Dash (10s cooldown)</p>
+                <p><span class="key">Q</span> - Dash (5s cooldown)</p>
+                <p><span class="key">Space</span> - Sprint (hold)</p>
                 <p><span class="key">I</span> - Open Inventory</p>
                 <p><span class="key">T</span> - Place Tower (300 kills)</p>
-                <p><span class="key">Space</span> - Pause</p>
+                <p><span class="key">P</span> / <span class="key">Esc</span> - Pause</p>
                 <p><span class="key">R</span> - Restart Level</p>
             </div>
             <button id="controls-back-btn" class="menu-btn">BACK</button>
@@ -151,6 +152,13 @@
                     <div id="dash-cooldown-fill"></div>
                 </div>
                 <span id="dash-label">DASH [Q]</span>
+            </div>
+            <!-- Sprint Bar -->
+            <div id="sprint-container">
+                <div id="sprint-bar">
+                    <div id="sprint-fill"></div>
+                </div>
+                <span id="sprint-label">SPRINT [SPACE]</span>
             </div>
             <!-- Player Name Display -->
             <div id="player-name-display"></div>

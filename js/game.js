@@ -182,6 +182,11 @@ class Game {
                 }
 
                 if (e.code === 'Space') {
+                    e.preventDefault();
+                    this.player.sprintKeyHeld = true;
+                }
+
+                if (e.code === 'KeyP' || e.code === 'Escape') {
                     this.pause();
                 }
 
@@ -189,7 +194,7 @@ class Game {
                     this.restartLevel();
                 }
             } else if (this.state === 'paused') {
-                if (e.code === 'Space' || e.code === 'Escape') {
+                if (e.code === 'KeyP' || e.code === 'Escape') {
                     this.resume();
                 }
             }
@@ -197,6 +202,9 @@ class Game {
 
         document.addEventListener('keyup', (e) => {
             this.player.handleKeyUp(e.code);
+            if (e.code === 'Space') {
+                this.player.sprintKeyHeld = false;
+            }
         });
 
         // Click anywhere to initialize audio
@@ -488,6 +496,9 @@ class Game {
         this.state = 'gameOver';
         UI.hideHUD();
         UI.hideBossHealth();
+        // Lose kills on death
+        this.kills = 0;
+        this.score = 0;
         // Save high score on game over
         const finalScore = this.totalScore + this.score;
         UI.saveHighScore(this.playerName, finalScore, this.levelManager.currentLevel);
@@ -580,6 +591,9 @@ class Game {
 
         // Update dash cooldown UI
         UI.updateDashCooldown(this.player.getDashCooldownPercent());
+
+        // Update sprint bar UI
+        UI.updateSprintBar(this.player.getSprintPercent(), this.player.isSprinting, this.player.sprintExhausted);
 
         // Update bullets (pass wallManager for collision)
         this.bulletManager.update(dt, this.wallManager);
