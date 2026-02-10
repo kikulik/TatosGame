@@ -235,26 +235,55 @@ body {
     bottom: 100px;
     left: 50%;
     transform: translateX(-50%);
-    width: 400px;
+    width: 500px;
     text-align: center;
 }
 
 #boss-name {
     color: #ff4444;
-    font-size: 1.2em;
+    font-size: 1.4em;
     font-weight: bold;
-    text-shadow: 0 0 10px #ff4444;
+    text-shadow: 0 0 15px #ff4444, 0 0 30px rgba(255, 68, 68, 0.3);
+    letter-spacing: 4px;
+    display: block;
+}
+
+#boss-phase {
+    color: #ffcc00;
+    font-size: 0.85em;
+    font-weight: bold;
     letter-spacing: 3px;
+    text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+    display: block;
+    margin-top: 2px;
+}
+
+#boss-phase.phase-2 {
+    color: #ff8800;
+    text-shadow: 0 0 10px rgba(255, 136, 0, 0.5);
+}
+
+#boss-phase.phase-3 {
+    color: #ff0000;
+    text-shadow: 0 0 15px rgba(255, 0, 0, 0.7);
+    animation: bossPhase3Pulse 0.5s ease-in-out infinite;
+}
+
+@keyframes bossPhase3Pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
 }
 
 .boss-health-bar {
     width: 100%;
-    height: 20px;
-    background: #333;
+    height: 24px;
+    background: #222;
     border: 2px solid #ff4444;
-    border-radius: 10px;
+    border-radius: 12px;
     overflow: hidden;
     margin-top: 5px;
+    position: relative;
+    box-shadow: 0 0 15px rgba(255, 68, 68, 0.3), inset 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 #boss-health-fill {
@@ -262,6 +291,37 @@ body {
     height: 100%;
     background: linear-gradient(90deg, #ff0000 0%, #ff4444 50%, #ff0000 100%);
     transition: width 0.2s ease;
+    position: relative;
+}
+
+#boss-health-fill.phase-2 {
+    background: linear-gradient(90deg, #ff6600 0%, #ff8800 50%, #ff6600 100%);
+}
+
+#boss-health-fill.phase-3 {
+    background: linear-gradient(90deg, #ff0000 0%, #ff2200 30%, #ff4400 50%, #ff2200 70%, #ff0000 100%);
+    animation: bossHealthPulse 1s ease-in-out infinite;
+}
+
+@keyframes bossHealthPulse {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.3); }
+}
+
+.boss-phase-marker {
+    position: absolute;
+    top: 0;
+    width: 2px;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.4);
+    z-index: 1;
+}
+
+#boss-health-text {
+    color: #ccc;
+    font-size: 0.8em;
+    margin-top: 3px;
+    letter-spacing: 1px;
 }
 
 /* Credits Footer */

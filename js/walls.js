@@ -63,12 +63,22 @@ class Wall {
     }
 
     draw(ctx) {
-        // Wall shadow
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-        ctx.fillRect(this.x + 4, this.y + 4, this.width, this.height);
-
-        // Wall body
+        // Outer shadow (bigger, softer)
+        ctx.save();
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+        ctx.shadowBlur = 15;
+        ctx.shadowOffsetX = 6;
+        ctx.shadowOffsetY = 6;
         ctx.fillStyle = this.color;
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+        ctx.restore();
+
+        // Wall body gradient
+        const wallGrad = ctx.createLinearGradient(this.x, this.y, this.x, this.y + this.height);
+        wallGrad.addColorStop(0, '#606060');
+        wallGrad.addColorStop(0.5, this.color);
+        wallGrad.addColorStop(1, '#3a3a3a');
+        ctx.fillStyle = wallGrad;
         ctx.fillRect(this.x, this.y, this.width, this.height);
 
         // Wall border
@@ -87,13 +97,11 @@ class Wall {
             const y = this.y + row * brickHeight;
             if (y >= this.y + this.height) break;
 
-            // Horizontal line
             ctx.beginPath();
             ctx.moveTo(this.x, y);
             ctx.lineTo(this.x + this.width, y);
             ctx.stroke();
 
-            // Vertical lines (offset every other row)
             const offset = (row % 2) * (brickWidth / 2);
             for (let col = 0; col <= this.width / brickWidth + 1; col++) {
                 const x = this.x + col * brickWidth - offset;
@@ -107,8 +115,17 @@ class Wall {
         }
 
         // Top highlight
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
         ctx.fillRect(this.x, this.y, this.width, 4);
+
+        // Left highlight
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.07)';
+        ctx.fillRect(this.x, this.y, 3, this.height);
+
+        // Bottom/right dark edge
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        ctx.fillRect(this.x, this.y + this.height - 3, this.width, 3);
+        ctx.fillRect(this.x + this.width - 3, this.y, 3, this.height);
     }
 }
 

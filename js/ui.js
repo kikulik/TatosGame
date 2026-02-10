@@ -27,7 +27,9 @@ class UIManager {
             // Boss health
             bossHealthContainer: document.getElementById('boss-health-container'),
             bossName: document.getElementById('boss-name'),
+            bossPhase: document.getElementById('boss-phase'),
             bossHealthFill: document.getElementById('boss-health-fill'),
+            bossHealthText: document.getElementById('boss-health-text'),
 
             // Level intro
             levelTitle: document.getElementById('level-title'),
@@ -412,10 +414,31 @@ class UIManager {
         }
     }
 
-    showBossHealth(name, healthPercent) {
+    showBossHealth(name, healthPercent, phase = 1, currentHP = 0, maxHP = 0) {
         this.elements.bossHealthContainer.classList.remove('hidden');
         this.elements.bossName.textContent = name;
         this.elements.bossHealthFill.style.width = `${healthPercent * 100}%`;
+
+        // Update phase display
+        if (this.elements.bossPhase) {
+            const phaseNames = { 1: 'PHASE 1', 2: 'PHASE 2 - ENRAGED', 3: 'PHASE 3 - BERSERK' };
+            this.elements.bossPhase.textContent = phaseNames[phase] || `PHASE ${phase}`;
+            this.elements.bossPhase.className = '';
+            if (phase >= 2) this.elements.bossPhase.classList.add('phase-2');
+            if (phase >= 3) this.elements.bossPhase.classList.add('phase-3');
+        }
+
+        // Update health fill color per phase
+        if (this.elements.bossHealthFill) {
+            this.elements.bossHealthFill.className = '';
+            if (phase === 2) this.elements.bossHealthFill.classList.add('phase-2');
+            if (phase >= 3) this.elements.bossHealthFill.classList.add('phase-3');
+        }
+
+        // Show HP numbers
+        if (this.elements.bossHealthText) {
+            this.elements.bossHealthText.textContent = `${Math.ceil(currentHP)} / ${maxHP}`;
+        }
     }
 
     updateBossHealth(healthPercent) {

@@ -1318,4 +1318,15 @@ class ZombieManager {
     clear() {
         this.zombies = [];
     }
+
+    // Kill all zombies with dramatic effect (for boss entrance)
+    killAllDramatically() {
+        for (const zombie of this.zombies) {
+            if (zombie.alive) {
+                zombie.alive = false;
+                Particles.deathBurst(zombie.x, zombie.y, '#ff4444', 6);
+            }
+        }
+        this.zombies = [];
+    }
 }

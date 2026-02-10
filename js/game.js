@@ -45,6 +45,12 @@ class Game {
         this.bossKillAnimationDuration = 2; // 2 seconds of animation
         this.showingBossKillAnimation = false;
 
+        // Ambient particles for background
+        this.ambientParticles = [];
+        this.groundDecals = [];
+        this.maxDecals = 60;
+        this.bossArenaTimer = 0;
+
         // Inventory state
         this.inventoryOpen = false;
 
@@ -85,6 +91,9 @@ class Game {
 
         // Initialize audio
         Audio.init();
+
+        // Initialize ambient particles
+        this.initAmbientParticles();
 
         // Start game loop
         requestAnimationFrame((time) => this.gameLoop(time));
@@ -255,6 +264,40 @@ class Game {
         // Reset boss kill animation
         this.showingBossKillAnimation = false;
         this.bossKillAnimationTimer = 0;
+
+        // Reset ambient and decals
+        this.groundDecals = [];
+        this.bossArenaTimer = 0;
+        this.initAmbientParticles();
+    }
+
+    initAmbientParticles() {
+        this.ambientParticles = [];
+        const count = 40;
+        for (let i = 0; i < count; i++) {
+            this.ambientParticles.push({
+                x: Utils.random(0, GAME_WIDTH),
+                y: Utils.random(0, GAME_HEIGHT),
+                size: Utils.random(1, 3),
+                speed: Utils.random(5, 20),
+                angle: Utils.random(0, Math.PI * 2),
+                alpha: Utils.random(0.1, 0.4),
+                drift: Utils.random(-0.3, 0.3),
+                pulse: Utils.random(0, Math.PI * 2)
+            });
+        }
+    }
+
+    addGroundDecal(x, y, color, size) {
+        if (this.groundDecals.length >= this.maxDecals) {
+            this.groundDecals.shift();
+        }
+        this.groundDecals.push({
+            x, y, color,
+            size: size || Utils.random(8, 20),
+            alpha: 0.5,
+            age: 0
+        });
     }
 
     // Inventory methods
@@ -447,6 +490,9 @@ class Game {
         this.kills++;
         this.addScore(zombieData.points, zombieData.x, zombieData.y);
 
+        // Add blood decal on ground
+        this.addGroundDecal(zombieData.x, zombieData.y, Utils.randomChoice(Colors.particles.blood));
+
         // Update combo
         this.combo++;
         this.comboTimer = 0;
@@ -576,6 +622,20 @@ class Game {
             this.player.applyKnockback(knockback.angle, knockback.force * dt);
         }
 
+        // Update ambient particles
+        this.updateAmbient(dt);
+
+        // Fade ground decals
+        for (let i = this.groundDecals.length - 1; i >= 0; i--) {
+            this.groundDecals[i].age += dt;
+            this.groundDecals[i].alpha = Math.max(0.05, 0.5 - this.groundDecals[i].age * 0.02);
+        }
+
+        // Track boss arena timer
+        if (this.levelManager.bossSpawned && this.bossManager.isAlive()) {
+            this.bossArenaTimer += dt;
+        }
+
         // Update particles and effects
         Particles.update(dt);
         Effects.update(dt);
@@ -593,7 +653,7 @@ class Game {
         // Update boss health bar
         const boss = this.bossManager.getBoss();
         if (boss && boss.alive) {
-            UI.showBossHealth(boss.name, boss.health / boss.maxHealth);
+            UI.showBossHealth(boss.name, boss.health / boss.maxHealth, boss.phase, boss.health, boss.maxHealth);
         }
     }
 
@@ -651,11 +711,50 @@ class Game {
         ctx.restore();
     }
 
-    drawBackground(ctx) {
-        // Grid pattern
-        ctx.strokeStyle = 'rgba(50, 50, 50, 0.5)';
-        ctx.lineWidth = 1;
+    updateAmbient(dt) {
+        for (const p of this.ambientParticles) {
+            p.x += Math.cos(p.angle) * p.speed * dt + p.drift;
+            p.y += Math.sin(p.angle) * p.speed * dt;
+            p.pulse += dt * 2;
 
+            // Wrap around screen
+            if (p.x < -10) p.x = GAME_WIDTH + 10;
+            if (p.x > GAME_WIDTH + 10) p.x = -10;
+            if (p.y < -10) p.y = GAME_HEIGHT + 10;
+            if (p.y > GAME_HEIGHT + 10) p.y = -10;
+        }
+    }
+
+    drawBackground(ctx) {
+        const level = this.levelManager ? this.levelManager.currentLevel : 1;
+        const theme = Colors.levelThemes[level] || Colors.levelThemes[1];
+        const isBossActive = this.levelManager && this.levelManager.bossSpawned && this.bossManager && this.bossManager.isAlive();
+
+        // Level-themed background fill
+        ctx.fillStyle = theme.bg;
+        ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+        // Ground texture - scattered debris dots
+        if (!this._groundDots || this._groundDotsLevel !== level) {
+            this._groundDots = [];
+            this._groundDotsLevel = level;
+            for (let i = 0; i < 120; i++) {
+                this._groundDots.push({
+                    x: Utils.random(0, GAME_WIDTH),
+                    y: Utils.random(0, GAME_HEIGHT),
+                    size: Utils.random(1, 3),
+                    alpha: Utils.random(0.05, 0.15)
+                });
+            }
+        }
+        for (const dot of this._groundDots) {
+            ctx.fillStyle = `rgba(255, 255, 255, ${dot.alpha})`;
+            ctx.fillRect(dot.x, dot.y, dot.size, dot.size);
+        }
+
+        // Grid pattern with themed color
+        ctx.strokeStyle = theme.grid;
+        ctx.lineWidth = 1;
         const gridSize = 50;
 
         for (let x = 0; x <= GAME_WIDTH; x += gridSize) {
@@ -664,7 +763,6 @@ class Game {
             ctx.lineTo(x, GAME_HEIGHT);
             ctx.stroke();
         }
-
         for (let y = 0; y <= GAME_HEIGHT; y += gridSize) {
             ctx.beginPath();
             ctx.moveTo(0, y);
@@ -672,15 +770,165 @@ class Game {
             ctx.stroke();
         }
 
-        // Vignette effect
+        // Ground blood decals (behind entities)
+        for (const decal of this.groundDecals) {
+            ctx.save();
+            ctx.globalAlpha = decal.alpha;
+            ctx.fillStyle = decal.color;
+            ctx.beginPath();
+            ctx.arc(decal.x, decal.y, decal.size, 0, Math.PI * 2);
+            ctx.fill();
+            // Splatter detail
+            for (let s = 0; s < 3; s++) {
+                const sx = decal.x + Math.cos(s * 2.1) * decal.size * 0.8;
+                const sy = decal.y + Math.sin(s * 2.1) * decal.size * 0.7;
+                ctx.beginPath();
+                ctx.arc(sx, sy, decal.size * 0.4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        // Ambient floating particles
+        for (const p of this.ambientParticles) {
+            const pulseAlpha = p.alpha * (0.7 + 0.3 * Math.sin(p.pulse));
+            ctx.save();
+            ctx.globalAlpha = pulseAlpha;
+            ctx.fillStyle = isBossActive ? theme.ambientAlt : theme.ambient;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        // Boss arena effects
+        if (isBossActive) {
+            this.drawBossArena(ctx, theme);
+        }
+
+        // Vignette effect - themed
+        const vigRadius = isBossActive ? GAME_HEIGHT / 4 : GAME_HEIGHT / 3;
         const gradient = ctx.createRadialGradient(
-            GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_HEIGHT / 3,
+            GAME_WIDTH / 2, GAME_HEIGHT / 2, vigRadius,
             GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_HEIGHT
         );
         gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.5)');
+        gradient.addColorStop(1, isBossActive ? 'rgba(0, 0, 0, 0.75)' : theme.vignette);
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+        // Edge glow during boss fight
+        if (isBossActive) {
+            const pulse = 0.3 + 0.15 * Math.sin(this.bossArenaTimer * 3);
+            const boss = this.bossManager.getBoss();
+            const phaseColor = boss && boss.phase === 3 ? `rgba(255, 0, 0, ${pulse})`
+                             : boss && boss.phase === 2 ? `rgba(255, 100, 0, ${pulse})`
+                             : `rgba(255, 50, 50, ${pulse * 0.6})`;
+
+            // Top edge
+            const edgeGrad = ctx.createLinearGradient(0, 0, 0, 40);
+            edgeGrad.addColorStop(0, phaseColor);
+            edgeGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = edgeGrad;
+            ctx.fillRect(0, 0, GAME_WIDTH, 40);
+
+            // Bottom edge
+            const botGrad = ctx.createLinearGradient(0, GAME_HEIGHT, 0, GAME_HEIGHT - 40);
+            botGrad.addColorStop(0, phaseColor);
+            botGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = botGrad;
+            ctx.fillRect(0, GAME_HEIGHT - 40, GAME_WIDTH, 40);
+
+            // Left edge
+            const leftGrad = ctx.createLinearGradient(0, 0, 40, 0);
+            leftGrad.addColorStop(0, phaseColor);
+            leftGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = leftGrad;
+            ctx.fillRect(0, 0, 40, GAME_HEIGHT);
+
+            // Right edge
+            const rightGrad = ctx.createLinearGradient(GAME_WIDTH, 0, GAME_WIDTH - 40, 0);
+            rightGrad.addColorStop(0, phaseColor);
+            rightGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = rightGrad;
+            ctx.fillRect(GAME_WIDTH - 40, 0, 40, GAME_HEIGHT);
+        }
+    }
+
+    drawBossArena(ctx, theme) {
+        const cx = GAME_WIDTH / 2;
+        const cy = GAME_HEIGHT / 2;
+        const boss = this.bossManager.getBoss();
+        const t = this.bossArenaTimer;
+
+        // Rotating danger ring
+        const ringRadius = Math.min(GAME_WIDTH, GAME_HEIGHT) * 0.42;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(t * 0.2);
+
+        const segments = 24;
+        for (let i = 0; i < segments; i++) {
+            const a1 = (i / segments) * Math.PI * 2;
+            const a2 = ((i + 0.5) / segments) * Math.PI * 2;
+            const pulse = 0.15 + 0.1 * Math.sin(t * 4 + i);
+
+            ctx.strokeStyle = i % 2 === 0
+                ? `rgba(255, 50, 50, ${pulse})`
+                : `rgba(255, 150, 0, ${pulse * 0.5})`;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(0, 0, ringRadius, a1, a2);
+            ctx.stroke();
+        }
+        ctx.restore();
+
+        // Inner glow circle around boss
+        if (boss && boss.alive) {
+            const bx = boss.x;
+            const by = boss.y;
+            const glowSize = boss.radius * 3 + Math.sin(t * 5) * 10;
+            const phaseGlow = boss.phase === 3 ? 'rgba(255, 0, 0, 0.08)'
+                            : boss.phase === 2 ? 'rgba(255, 100, 0, 0.06)'
+                            : 'rgba(255, 200, 50, 0.04)';
+            const bossGlow = ctx.createRadialGradient(bx, by, 0, bx, by, glowSize);
+            bossGlow.addColorStop(0, phaseGlow);
+            bossGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = bossGlow;
+            ctx.beginPath();
+            ctx.arc(bx, by, glowSize, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Corner danger markers
+        const cornerSize = 50;
+        const cornerPulse = 0.2 + 0.15 * Math.sin(t * 3);
+        ctx.strokeStyle = `rgba(255, 0, 0, ${cornerPulse})`;
+        ctx.lineWidth = 2;
+        // Top-left
+        ctx.beginPath();
+        ctx.moveTo(5, cornerSize + 5);
+        ctx.lineTo(5, 5);
+        ctx.lineTo(cornerSize + 5, 5);
+        ctx.stroke();
+        // Top-right
+        ctx.beginPath();
+        ctx.moveTo(GAME_WIDTH - cornerSize - 5, 5);
+        ctx.lineTo(GAME_WIDTH - 5, 5);
+        ctx.lineTo(GAME_WIDTH - 5, cornerSize + 5);
+        ctx.stroke();
+        // Bottom-left
+        ctx.beginPath();
+        ctx.moveTo(5, GAME_HEIGHT - cornerSize - 5);
+        ctx.lineTo(5, GAME_HEIGHT - 5);
+        ctx.lineTo(cornerSize + 5, GAME_HEIGHT - 5);
+        ctx.stroke();
+        // Bottom-right
+        ctx.beginPath();
+        ctx.moveTo(GAME_WIDTH - cornerSize - 5, GAME_HEIGHT - 5);
+        ctx.lineTo(GAME_WIDTH - 5, GAME_HEIGHT - 5);
+        ctx.lineTo(GAME_WIDTH - 5, GAME_HEIGHT - cornerSize - 5);
+        ctx.stroke();
     }
 
     gameLoop(currentTime) {
