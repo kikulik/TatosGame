@@ -22,13 +22,22 @@ class Player {
 
         // Dash system
         this.dashCooldown = 0;
-        this.dashMaxCooldown = 10; // 10 seconds cooldown
+        this.dashMaxCooldown = 5; // 5 seconds cooldown
         this.dashDistance = 300;
         this.isDashing = false;
         this.dashDuration = 0.1;
         this.dashTimer = 0;
         this.dashTargetX = 0;
         this.dashTargetY = 0;
+
+        // Sprint system
+        this.sprintMaxDuration = 10;  // 10 seconds of sprint
+        this.sprintTimer = 10;        // Current sprint energy
+        this.sprintRechargeTime = 15; // 15 seconds to fully recharge
+        this.sprintSpeedMult = 1.3;   // 30% faster
+        this.isSprinting = false;
+        this.sprintExhausted = false;  // Fully depleted, needs full recharge
+        this.sprintKeyHeld = false;
 
         // Visual
         this.color = Colors.player;
@@ -64,6 +73,10 @@ class Player {
         this.dashCooldown = 0;
         this.isDashing = false;
         this.dashTimer = 0;
+        this.sprintTimer = this.sprintMaxDuration;
+        this.isSprinting = false;
+        this.sprintExhausted = false;
+        this.sprintKeyHeld = false;
 
         if (!keepInventory) {
             // Full reset - new game
@@ -101,6 +114,10 @@ class Player {
 
     getDashCooldownPercent() {
         return Math.max(0, 1 - this.dashCooldown / this.dashMaxCooldown);
+    }
+
+    getSprintPercent() {
+        return this.sprintTimer / this.sprintMaxDuration;
     }
 
     // Inventory management
@@ -264,6 +281,27 @@ class Player {
             return; // Skip normal movement during dash
         }
 
+        // Sprint logic
+        if (this.sprintKeyHeld && this.sprintTimer > 0 && !this.sprintExhausted) {
+            this.isSprinting = true;
+            this.sprintTimer -= dt;
+            if (this.sprintTimer <= 0) {
+                this.sprintTimer = 0;
+                this.isSprinting = false;
+                this.sprintExhausted = true;
+            }
+        } else {
+            this.isSprinting = false;
+            // Recharge sprint
+            if (this.sprintTimer < this.sprintMaxDuration) {
+                this.sprintTimer += (this.sprintMaxDuration / this.sprintRechargeTime) * dt;
+                if (this.sprintTimer >= this.sprintMaxDuration) {
+                    this.sprintTimer = this.sprintMaxDuration;
+                    this.sprintExhausted = false;
+                }
+            }
+        }
+
         // Calculate movement direction
         let moveX = 0;
         let moveY = 0;
@@ -280,9 +318,10 @@ class Player {
             moveY /= length;
         }
 
-        // Apply movement
-        this.vx = moveX * this.speed;
-        this.vy = moveY * this.speed;
+        // Apply movement (with sprint speed boost)
+        const currentSpeed = this.isSprinting ? this.speed * this.sprintSpeedMult : this.speed;
+        this.vx = moveX * currentSpeed;
+        this.vy = moveY * currentSpeed;
 
         // Apply knockback
         this.x += (this.vx + this.knockbackX) * dt;

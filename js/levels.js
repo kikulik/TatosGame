@@ -8,7 +8,7 @@ const LevelConfig = {
         zombieTypes: [
             { type: 'walker', weight: 100 }
         ],
-        spawnInterval: 3.0,
+        spawnInterval: 2.5,
         bossSpawnTime: 50, // Boss spawns at 30 seconds remaining
         description: [
             'Basic Walkers - Slow, predictable movement',
@@ -24,7 +24,7 @@ const LevelConfig = {
             { type: 'walker', weight: 60 },
             { type: 'runner', weight: 40 }
         ],
-        spawnInterval: 2.5,
+        spawnInterval: 2.0,
         bossSpawnTime: 50,
         description: [
             'Basic Walkers (60%)',
