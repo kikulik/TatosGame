@@ -141,8 +141,10 @@ class WallManager {
 
         // Wall parameters based on level
         // More walls as level increases
-        const baseWallCount = Math.min(level, 5); // 1-5 walls based on level
-        const wallCount = baseWallCount + Math.floor(level / 2); // Extra walls at higher levels
+        // Level 11 (final boss): fewer walls for open arena
+        const effectiveLevel = level === 11 ? 4 : level;
+        const baseWallCount = Math.min(effectiveLevel, 5); // 1-5 walls based on level
+        const wallCount = baseWallCount + Math.floor(effectiveLevel / 2); // Extra walls at higher levels
 
         // Minimum wall dimensions
         const minWallWidth = 60;

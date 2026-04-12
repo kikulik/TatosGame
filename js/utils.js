@@ -242,6 +242,7 @@ const Colors = {
         7:  { bg: '#1a0f0f', grid: 'rgba(70, 25, 25, 0.3)', vignette: 'rgba(25, 0, 0, 0.7)', ambient: '#6a2020', ambientAlt: '#4a1010', name: 'horde' },
         8:  { bg: '#0f0f1a', grid: 'rgba(40, 30, 80, 0.3)', vignette: 'rgba(10, 0, 30, 0.7)', ambient: '#4a2a8a', ambientAlt: '#2a1a5a', name: 'tactical' },
         9:  { bg: '#1a0a1a', grid: 'rgba(80, 20, 80, 0.3)', vignette: 'rgba(30, 0, 30, 0.7)', ambient: '#8a2a8a', ambientAlt: '#5a1a5a', name: 'chaos' },
-        10: { bg: '#0a0a0a', grid: 'rgba(80, 60, 10, 0.25)', vignette: 'rgba(0, 0, 0, 0.8)', ambient: '#aa7700', ambientAlt: '#773300', name: 'apocalypse' }
+        10: { bg: '#0a0a0a', grid: 'rgba(80, 60, 10, 0.25)', vignette: 'rgba(0, 0, 0, 0.8)', ambient: '#aa7700', ambientAlt: '#773300', name: 'apocalypse' },
+        11: { bg: '#0d0a07', grid: 'rgba(60, 45, 25, 0.2)', vignette: 'rgba(0, 0, 0, 0.85)', ambient: '#8a6530', ambientAlt: '#5a3a1a', name: 'ruins' }
     }
 };

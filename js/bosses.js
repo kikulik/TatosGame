@@ -1991,6 +1991,287 @@ class OmegaZombie extends Boss {
     }
 }
 
+// ==================== LEVEL 11: THE DESTROYER (FINAL BOSS) ====================
+class TheDestroyer extends Boss {
+    constructor(x, y) {
+        super(x, y);
+        this.name = 'THE DESTROYER';
+        this.health = 1200;
+        this.maxHealth = 1200;
+        this.radius = 80;
+        this.hitRadius = 75;
+        this.speed = 55;
+        this.color = '#8B0000';
+        this.points = 10000;
+
+        // Slow bullet attack
+        this.shootCooldown = 0;
+        this.shootInterval = 2.5; // Fires every 2.5 seconds
+        this.bulletsFired = [];
+
+        // Stomp attack
+        this.stompCooldown = 0;
+        this.stompInterval = 8;
+        this.isStomping = false;
+        this.stompTimer = 0;
+
+        // Charge attack
+        this.chargeState = 'idle';
+        this.chargeTimer = 0;
+        this.chargeAngle = 0;
+        this.chargeCooldown = 0;
+
+        // Spawn minions
+        this.minionCooldown = 0;
+        this.minionInterval = 12;
+
+        // Visual
+        this.pulsePhase = 0;
+        this.eyeGlow = 0;
+    }
+
+    update(dt, playerX, playerY, bulletManager) {
+        super.update(dt, playerX, playerY);
+        this.pulsePhase += dt * 2;
+        this.eyeGlow = 0.6 + 0.4 * Math.sin(this.pulsePhase * 3);
+        this.shootCooldown -= dt;
+        this.stompCooldown -= dt;
+        this.chargeCooldown -= dt;
+        this.minionCooldown -= dt;
+
+        // Shoot slow bullets at the player
+        if (this.shootCooldown <= 0 && bulletManager) {
+            this.shootCooldown = this.shootInterval - (this.phase - 1) * 0.4;
+            const bulletsToFire = this.phase >= 3 ? 5 : (this.phase >= 2 ? 3 : 1);
+            const baseAngle = Utils.angle(this.x, this.y, playerX, playerY);
+
+            for (let i = 0; i < bulletsToFire; i++) {
+                const spreadAngle = bulletsToFire === 1 ? baseAngle
+                    : baseAngle + ((i / (bulletsToFire - 1)) - 0.5) * 0.8;
+                bulletManager.spawnEnemyBullet(
+                    this.x + Math.cos(spreadAngle) * this.radius,
+                    this.y + Math.sin(spreadAngle) * this.radius,
+                    spreadAngle,
+                    200, // Slow bullet speed
+                    2,   // Damage
+                    '#ff2200',
+                    12   // Large bullet radius
+                );
+            }
+            // Visual feedback
+            Effects.addFlash(0.05, 'rgba(255, 0, 0, 0.15)');
+            Utils.screenShake.shake(3, 0.1);
+        }
+
+        // Stomp attack - shockwave
+        if (this.stompCooldown <= 0 && !this.isStomping) {
+            const dist = Utils.distance(this.x, this.y, playerX, playerY);
+            if (dist < 300) {
+                this.isStomping = true;
+                this.stompTimer = 0;
+                this.stompCooldown = this.stompInterval - this.phase;
+                Effects.addText(this.x, this.y - 100, 'GROUND SLAM!', '#ff4400', 1.5, 26);
+            }
+        }
+
+        if (this.isStomping) {
+            this.stompTimer += dt;
+            if (this.stompTimer > 0.5 && this.stompTimer < 0.6) {
+                Effects.addShockwave(this.x, this.y, 300, 0.5, 'rgba(200, 50, 0, 0.5)');
+                Utils.screenShake.shake(20, 0.5);
+                Particles.explosion(this.x, this.y, 25, 2);
+            }
+            if (this.stompTimer > 1.2) {
+                this.isStomping = false;
+            }
+        }
+
+        // Charge attack
+        this.chargeTimer += dt;
+        if (this.chargeCooldown <= 0 && this.chargeState === 'idle') {
+            const dist = Utils.distance(this.x, this.y, playerX, playerY);
+            if (dist > 200 && dist < 500) {
+                this.chargeState = 'windup';
+                this.chargeTimer = 0;
+                this.chargeAngle = Utils.angle(this.x, this.y, playerX, playerY);
+                this.chargeCooldown = 6 - this.phase * 0.5;
+                Effects.addText(this.x, this.y - 100, 'CHARGE!', '#ff8800', 1, 22);
+            }
+        }
+
+        switch (this.chargeState) {
+            case 'idle':
+                if (!this.isStomping) {
+                    this.moveToward(playerX, playerY, dt, this.speed);
+                }
+                break;
+            case 'windup':
+                this.angle = Utils.angle(this.x, this.y, playerX, playerY);
+                Particles.trail(this.x, this.y, '#ff4400', 8);
+                if (this.chargeTimer > 0.8) {
+                    this.chargeState = 'charging';
+                    this.chargeTimer = 0;
+                    this.chargeAngle = Utils.angle(this.x, this.y, playerX, playerY);
+                }
+                break;
+            case 'charging':
+                this.x += Math.cos(this.chargeAngle) * 450 * this.phaseSpeedMult * dt;
+                this.y += Math.sin(this.chargeAngle) * 450 * this.phaseSpeedMult * dt;
+                Particles.trail(this.x, this.y, this.color, 12);
+                if (this.chargeTimer > 0.7) {
+                    this.chargeState = 'idle';
+                    Utils.screenShake.shake(12, 0.3);
+                    Effects.addShockwave(this.x, this.y, 120, 0.3, 'rgba(139, 0, 0, 0.4)');
+                }
+                break;
+        }
+
+        // Spawn minions in later phases
+        if (this.phase >= 2 && this.minionCooldown <= 0) {
+            this.minionCooldown = this.minionInterval - this.phase * 2;
+            const count = this.phase >= 3 ? 4 : 2;
+            const types = ['runner', 'berserker', 'shielded'];
+            for (let i = 0; i < count; i++) {
+                this.spawnMinion(Utils.randomChoice(types));
+            }
+            Effects.addText(this.x, this.y - 80, 'RISE, MY MINIONS!', '#ff4444', 1.5, 20);
+        }
+
+        this.clampToBounds();
+    }
+
+    getShockwaveKnockback(playerX, playerY) {
+        // Stomp knockback
+        if (this.isStomping && this.stompTimer > 0.5 && this.stompTimer < 1.0) {
+            const dist = Utils.distance(this.x, this.y, playerX, playerY);
+            if (dist < 300) {
+                return {
+                    angle: Utils.angle(this.x, this.y, playerX, playerY),
+                    force: (1 - dist / 300) * 700
+                };
+            }
+        }
+        return null;
+    }
+
+    draw(ctx) {
+        if (!this.alive) return;
+        const pulse = 1 + Math.sin(this.pulsePhase) * 0.04;
+
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+        ctx.scale(pulse, pulse);
+
+        // Dark aura
+        const auraGrad = ctx.createRadialGradient(0, 0, this.radius * 0.6, 0, 0, this.radius * 2);
+        auraGrad.addColorStop(0, 'rgba(139, 0, 0, 0.2)');
+        auraGrad.addColorStop(1, 'rgba(139, 0, 0, 0)');
+        ctx.fillStyle = auraGrad;
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius * 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Main body - massive armored zombie
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Armor plating
+        ctx.strokeStyle = '#4a0000';
+        ctx.lineWidth = 6;
+        ctx.stroke();
+
+        // Armor segments
+        ctx.strokeStyle = '#3a0000';
+        ctx.lineWidth = 3;
+        for (let i = 0; i < 6; i++) {
+            const a = (i / 6) * Math.PI * 2;
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(a) * this.radius * 0.5, Math.sin(a) * this.radius * 0.5);
+            ctx.lineTo(Math.cos(a) * this.radius, Math.sin(a) * this.radius);
+            ctx.stroke();
+        }
+
+        // Shoulder spikes
+        ctx.fillStyle = '#5a1010';
+        const spikePositions = [
+            { a: -0.6, len: 30 }, { a: -0.3, len: 25 },
+            { a: 0.3, len: 25 }, { a: 0.6, len: 30 }
+        ];
+        for (const sp of spikePositions) {
+            const bx = Math.cos(sp.a) * this.radius;
+            const by = Math.sin(sp.a) * this.radius;
+            ctx.beginPath();
+            ctx.moveTo(bx, by);
+            ctx.lineTo(bx + Math.cos(sp.a) * sp.len, by + Math.sin(sp.a) * sp.len);
+            ctx.lineTo(bx + Math.cos(sp.a + 0.3) * sp.len * 0.5, by + Math.sin(sp.a + 0.3) * sp.len * 0.5);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        // Glowing eyes
+        ctx.shadowColor = '#ff0000';
+        ctx.shadowBlur = 15 * this.eyeGlow;
+        ctx.fillStyle = `rgba(255, 0, 0, ${this.eyeGlow})`;
+        ctx.beginPath();
+        ctx.arc(35, -18, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(35, 18, 10, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eye pupils
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(38, -18, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(38, 18, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Mouth/jaw
+        ctx.fillStyle = '#2a0000';
+        ctx.beginPath();
+        ctx.moveTo(40, -8);
+        ctx.lineTo(55, 0);
+        ctx.lineTo(40, 8);
+        ctx.closePath();
+        ctx.fill();
+
+        // Phase indicator crown/horns for later phases
+        if (this.phase >= 2) {
+            ctx.fillStyle = this.phase >= 3 ? '#ff4400' : '#cc3300';
+            for (let i = -2; i <= 2; i++) {
+                const hornH = 20 + (this.phase >= 3 ? 15 : 0);
+                ctx.beginPath();
+                ctx.moveTo(i * 18 - 5, -this.radius);
+                ctx.lineTo(i * 18, -this.radius - hornH);
+                ctx.lineTo(i * 18 + 5, -this.radius);
+                ctx.closePath();
+                ctx.fill();
+            }
+        }
+
+        ctx.restore();
+
+        // Stomp visual
+        if (this.isStomping && this.stompTimer < 0.5) {
+            ctx.save();
+            ctx.globalAlpha = 1 - this.stompTimer * 2;
+            ctx.strokeStyle = '#ff4400';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([10, 5]);
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, 300, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+        }
+    }
+}
+
 // ==================== BOSS MANAGER ====================
 class BossManager {
     constructor() {
@@ -1998,7 +2279,8 @@ class BossManager {
         this.bossTypes = {
             1: BigBernie, 2: SprintSally, 3: SkyReaper, 4: RageKing,
             5: MonsterTruckMike, 6: ChopperCommander, 7: HordeMaster,
-            8: TacticalNightmare, 9: ChaosIncarnate, 10: OmegaZombie
+            8: TacticalNightmare, 9: ChaosIncarnate, 10: OmegaZombie,
+            11: TheDestroyer
         };
     }
 
@@ -2013,9 +2295,9 @@ class BossManager {
         return this.boss;
     }
 
-    update(dt, playerX, playerY) {
+    update(dt, playerX, playerY, bulletManager) {
         if (!this.boss || !this.boss.alive) return;
-        this.boss.update(dt, playerX, playerY);
+        this.boss.update(dt, playerX, playerY, bulletManager);
     }
 
     draw(ctx) {
@@ -2028,7 +2310,7 @@ class BossManager {
         const active = bulletManager.getActive();
         for (let i = active.length - 1; i >= 0; i--) {
             const bullet = active[i];
-            if (!bullet.active) continue;
+            if (!bullet.active || bullet.isEnemyBullet) continue; // Skip enemy bullets
             if (Utils.circleCollision(bullet.x, bullet.y, bullet.radius, this.boss.x, this.boss.y, this.boss.hitRadius)) {
                 Particles.sparks(bullet.x, bullet.y, bullet.angle, 8);
                 // Bow arrows pierce through enemies

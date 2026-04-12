@@ -34,8 +34,11 @@ const WeaponTypes = {
     },
     shotgun: {
         name: 'Shotgun',
-        fireRate: 0.6,
+        fireRate: 0.72, // Nerfed 20% (was 0.6)
         damage: 2,
+        randomDamage: true, // Each pellet does 0.5-2 damage
+        minDamage: 0.5,
+        maxDamage: 2,
         speed: 700,
         bulletSize: 5,
         spread: 0.3,
@@ -159,6 +162,9 @@ class Weapon {
         this.hasAfterburn = config.hasAfterburn || false;
         this.afterburnDamage = config.afterburnDamage || 0;
         this.afterburnDuration = config.afterburnDuration || 0;
+        this.randomDamage = config.randomDamage || false;
+        this.minDamage = config.minDamage || 0;
+        this.maxDamage = config.maxDamage || 0;
     }
 
     shoot(x, y, angle, bulletManager, targetX = null, targetY = null) {
