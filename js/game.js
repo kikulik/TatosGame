@@ -284,6 +284,8 @@ class Game {
         // Reset ambient and decals
         this.groundDecals = [];
         this.bossArenaTimer = 0;
+        this._ruinBuildings = null; // Reset ruined city cache
+        this._ruinDecorations = null;
         this.initAmbientParticles();
     }
 
@@ -485,11 +487,50 @@ class Game {
             // Save high score on victory
             UI.saveHighScore(this.playerName, this.totalScore, this.levelManager.currentLevel);
             Audio.playLevelComplete();
+        } else if (this.levelManager.currentLevel === 10) {
+            // Teleport to final boss arena!
+            this.levelManager.nextLevel(); // Go to level 11
+            this.startFinalBossTransition();
         } else {
             this.levelManager.nextLevel();
             // Inventory is preserved through beginLevel
             this.showLevelIntro();
         }
+    }
+
+    startFinalBossTransition() {
+        // Dramatic teleport effect
+        this.state = 'playing';
+        UI.hideAllMenus();
+
+        // Flash and shake
+        Effects.addFlash(1.0, 'rgba(255, 255, 255, 0.8)');
+        Utils.screenShake.shake(25, 1.5);
+
+        // Show teleportation text
+        Effects.addText(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 100, 'TELEPORTING...', '#00ccff', 2.5, 40);
+        Effects.addText(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50, 'To the ruins of the old world', '#8a6530', 2.5, 22);
+
+        // Multiple shockwaves for teleport effect
+        for (let i = 0; i < 4; i++) {
+            setTimeout(() => {
+                Effects.addShockwave(GAME_WIDTH / 2, GAME_HEIGHT / 2, 200 + i * 150, 0.6, 'rgba(0, 200, 255, 0.4)');
+            }, i * 200);
+        }
+
+        // Reset level state and begin after a short delay
+        setTimeout(() => {
+            this.resetLevel(true); // Keep inventory
+            this.state = 'playing';
+            UI.showHUD();
+            UI.updatePlayerNameDisplay(this.playerName);
+            Audio.startMusic(this.levelManager.currentLevel);
+
+            // Dramatic boss arena entrance
+            Effects.addFlash(0.5, 'rgba(139, 0, 0, 0.4)');
+            Effects.addText(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 80, 'THE FINAL STAND', '#ff4444', 3, 42);
+            Effects.addText(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 30, 'Defeat The Destroyer to save humanity!', '#ff8844', 3, 20);
+        }, 1500);
     }
 
     gameOver() {
@@ -515,7 +556,7 @@ class Game {
         this.state = 'levelComplete';
         UI.hideHUD();
         UI.hideBossHealth();
-        UI.showLevelComplete(this.kills, this.score, this.bestCombo);
+        UI.showLevelComplete(this.kills, this.score, this.bestCombo, this.levelManager.isFinalBossLevel());
         Audio.stopMusic();
         Audio.playLevelComplete();
     }
@@ -612,8 +653,8 @@ class Game {
             this.addKill(kill);
         }
 
-        // Update boss
-        this.bossManager.update(dt, this.player.x, this.player.y);
+        // Update boss (pass bulletManager for bosses that shoot)
+        this.bossManager.update(dt, this.player.x, this.player.y, this.bulletManager);
 
         // Update towers
         this.towerManager.update(dt, this.zombieManager, this.bossManager, this.bulletManager);
@@ -691,7 +732,7 @@ class Game {
 
         // Update UI
         UI.updateHUD(
-            this.levelManager.currentLevel,
+            this.levelManager.isFinalBossLevel() ? 'FINAL' : this.levelManager.currentLevel,
             this.levelManager.getTimeRemaining(),
             this.kills,
             this.score,
@@ -838,6 +879,11 @@ class Game {
             ctx.restore();
         }
 
+        // Ruined city buildings for level 11
+        if (level === 11) {
+            this.drawRuinedCity(ctx);
+        }
+
         // Ambient floating particles
         for (const p of this.ambientParticles) {
             const pulseAlpha = p.alpha * (0.7 + 0.3 * Math.sin(p.pulse));
@@ -978,6 +1024,204 @@ class Game {
         ctx.lineTo(GAME_WIDTH - 5, GAME_HEIGHT - 5);
         ctx.lineTo(GAME_WIDTH - 5, GAME_HEIGHT - cornerSize - 5);
         ctx.stroke();
+    }
+
+    drawRuinedCity(ctx) {
+        if (!this._ruinBuildings) {
+            this._ruinBuildings = [];
+            // Generate random ruined buildings around the edges
+            const buildingConfigs = [
+                // Left side buildings
+                { x: 30, y: 80, w: 90, h: 140 },
+                { x: 20, y: 300, w: 70, h: 110 },
+                { x: 40, y: 500, w: 85, h: 160 },
+                // Right side buildings
+                { x: GAME_WIDTH - 120, y: 60, w: 95, h: 130 },
+                { x: GAME_WIDTH - 100, y: 350, w: 75, h: 120 },
+                { x: GAME_WIDTH - 130, y: 550, w: 100, h: 150 },
+                // Top buildings
+                { x: 250, y: 20, w: 80, h: 100 },
+                { x: 500, y: 30, w: 110, h: 90 },
+                { x: GAME_WIDTH - 350, y: 15, w: 90, h: 105 },
+                // Bottom buildings
+                { x: 200, y: GAME_HEIGHT - 150, w: 100, h: 130 },
+                { x: 450, y: GAME_HEIGHT - 120, w: 75, h: 100 },
+                { x: GAME_WIDTH - 300, y: GAME_HEIGHT - 140, w: 110, h: 120 },
+                // Scattered rubble piles
+                { x: 180, y: 200, w: 50, h: 35, isRubble: true },
+                { x: GAME_WIDTH - 250, y: 250, w: 60, h: 30, isRubble: true },
+                { x: 350, y: GAME_HEIGHT - 250, w: 55, h: 28, isRubble: true },
+                { x: GAME_WIDTH - 400, y: 450, w: 45, h: 32, isRubble: true },
+            ];
+            for (const b of buildingConfigs) {
+                // Add random damage details
+                b.damageHoles = [];
+                if (!b.isRubble) {
+                    const holeCount = Utils.randomInt(1, 4);
+                    for (let i = 0; i < holeCount; i++) {
+                        b.damageHoles.push({
+                            x: Utils.random(5, b.w - 15),
+                            y: Utils.random(5, b.h - 15),
+                            w: Utils.random(8, 20),
+                            h: Utils.random(6, 15)
+                        });
+                    }
+                    // Windows
+                    b.windows = [];
+                    const cols = Math.floor(b.w / 25);
+                    const rows = Math.floor(b.h / 30);
+                    for (let r = 0; r < rows; r++) {
+                        for (let c = 0; c < cols; c++) {
+                            if (Math.random() < 0.6) {
+                                b.windows.push({
+                                    x: 8 + c * 25,
+                                    y: 8 + r * 30,
+                                    broken: Math.random() < 0.5
+                                });
+                            }
+                        }
+                    }
+                }
+                this._ruinBuildings.push(b);
+            }
+            // Decorations: lampposts, debris
+            this._ruinDecorations = [];
+            for (let i = 0; i < 8; i++) {
+                this._ruinDecorations.push({
+                    x: Utils.random(100, GAME_WIDTH - 100),
+                    y: Utils.random(100, GAME_HEIGHT - 100),
+                    type: Utils.randomChoice(['lamppost', 'crack', 'debris', 'barrel']),
+                    angle: Utils.random(0, Math.PI * 2),
+                    size: Utils.random(0.8, 1.3)
+                });
+            }
+        }
+
+        // Draw buildings
+        for (const b of this._ruinBuildings) {
+            ctx.save();
+            if (b.isRubble) {
+                // Rubble pile
+                ctx.fillStyle = '#3a3025';
+                ctx.beginPath();
+                ctx.moveTo(b.x, b.y + b.h);
+                ctx.lineTo(b.x + b.w * 0.3, b.y);
+                ctx.lineTo(b.x + b.w * 0.7, b.y + b.h * 0.3);
+                ctx.lineTo(b.x + b.w, b.y + b.h);
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = '#2a2015';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            } else {
+                // Building body
+                ctx.fillStyle = '#2a2420';
+                ctx.fillRect(b.x, b.y, b.w, b.h);
+
+                // Darker edges
+                ctx.strokeStyle = '#1a1510';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(b.x, b.y, b.w, b.h);
+
+                // Damage holes (dark openings)
+                for (const hole of b.damageHoles) {
+                    ctx.fillStyle = '#0a0805';
+                    ctx.fillRect(b.x + hole.x, b.y + hole.y, hole.w, hole.h);
+                }
+
+                // Windows
+                for (const win of b.windows) {
+                    if (win.broken) {
+                        ctx.fillStyle = '#0d0a07';
+                        ctx.fillRect(b.x + win.x, b.y + win.y, 12, 16);
+                        // Broken glass shards
+                        ctx.strokeStyle = '#4a4030';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(b.x + win.x, b.y + win.y + 8);
+                        ctx.lineTo(b.x + win.x + 6, b.y + win.y + 3);
+                        ctx.stroke();
+                    } else {
+                        ctx.fillStyle = 'rgba(40, 50, 60, 0.6)';
+                        ctx.fillRect(b.x + win.x, b.y + win.y, 12, 16);
+                        ctx.strokeStyle = '#3a3020';
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(b.x + win.x, b.y + win.y, 12, 16);
+                    }
+                }
+
+                // Jagged top edge (collapsed roofline)
+                ctx.fillStyle = '#2a2420';
+                const segments = Math.floor(b.w / 12);
+                for (let i = 0; i < segments; i++) {
+                    const sx = b.x + i * 12;
+                    const sh = Utils.random(3, 12);
+                    ctx.fillRect(sx, b.y - sh, 12, sh);
+                    ctx.strokeStyle = '#1a1510';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(sx, b.y - sh, 12, sh);
+                }
+            }
+            ctx.restore();
+        }
+
+        // Draw decorations
+        for (const d of this._ruinDecorations) {
+            ctx.save();
+            ctx.translate(d.x, d.y);
+            ctx.scale(d.size, d.size);
+
+            switch (d.type) {
+                case 'lamppost':
+                    // Fallen lamppost
+                    ctx.rotate(d.angle);
+                    ctx.fillStyle = '#4a4a4a';
+                    ctx.fillRect(-2, -40, 4, 40);
+                    ctx.fillStyle = '#5a5a3a';
+                    ctx.fillRect(-6, -44, 12, 6);
+                    break;
+                case 'crack':
+                    // Ground crack
+                    ctx.strokeStyle = 'rgba(30, 20, 10, 0.6)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(15, -10);
+                    ctx.lineTo(25, 5);
+                    ctx.lineTo(40, -5);
+                    ctx.stroke();
+                    break;
+                case 'debris':
+                    // Scattered concrete chunks
+                    ctx.fillStyle = '#3a3530';
+                    for (let i = 0; i < 4; i++) {
+                        const dx = Utils.random(-15, 15);
+                        const dy = Utils.random(-10, 10);
+                        ctx.fillRect(dx, dy, Utils.random(4, 10), Utils.random(3, 8));
+                    }
+                    break;
+                case 'barrel':
+                    // Rusted barrel
+                    ctx.fillStyle = '#5a3a20';
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, 10, 14, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#3a2a15';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    // Rust streaks
+                    ctx.strokeStyle = '#7a4a20';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(-8, -3);
+                    ctx.lineTo(8, -3);
+                    ctx.moveTo(-8, 5);
+                    ctx.lineTo(8, 5);
+                    ctx.stroke();
+                    break;
+            }
+            ctx.restore();
+        }
     }
 
     gameLoop(currentTime) {

@@ -1208,7 +1208,7 @@ class ZombieManager {
 
         for (let i = active.length - 1; i >= 0; i--) {
             const bullet = active[i];
-            if (!bullet.active) continue;
+            if (!bullet.active || bullet.isEnemyBullet) continue; // Skip enemy bullets
 
             let bulletHit = false;
 

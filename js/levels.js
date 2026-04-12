@@ -78,13 +78,14 @@ const LevelConfig = {
         name: 'Vehicle Mayhem',
         theme: 'Zombies in vehicles',
         zombieTypes: [
-            { type: 'walker', weight: 30 },
+            { type: 'walker', weight: 25 },
             { type: 'runner', weight: 25 },
             { type: 'flying', weight: 15 },
-            { type: 'car', weight: 8 }, // Reduced from 25 - cars are now rare
-            { type: 'jumper', weight: 22 }
+            { type: 'car', weight: 12 },
+            { type: 'jumper', weight: 23 }
         ],
-        spawnInterval: 1.5,
+        spawnInterval: 1.1, // Harder (was 1.5)
+        spawnCount: 2,
         bossSpawnTime: 50,
         description: [
             'Mixed ground zombies (50%)',
@@ -99,14 +100,15 @@ const LevelConfig = {
         name: 'Helicopter Hell',
         theme: 'Air superiority',
         zombieTypes: [
-            { type: 'walker', weight: 20 },
+            { type: 'walker', weight: 15 },
             { type: 'runner', weight: 10 },
-            { type: 'berserker', weight: 10 },
+            { type: 'berserker', weight: 12 },
             { type: 'flying', weight: 20 },
-            { type: 'helicopter', weight: 20 },
+            { type: 'helicopter', weight: 23 },
             { type: 'diveBomber', weight: 20 }
         ],
-        spawnInterval: 1.3,
+        spawnInterval: 0.9, // Harder (was 1.3)
+        spawnCount: 2,
         bossSpawnTime: 50,
         description: [
             'Mixed ground zombies (40%)',
@@ -129,8 +131,8 @@ const LevelConfig = {
             { type: 'jumper', weight: 15 },
             { type: 'diveBomber', weight: 15 }
         ],
-        spawnInterval: 0.6, // Spawns 2 every 1.2 seconds
-        spawnCount: 2,
+        spawnInterval: 1.2, // Easier (was 0.6)
+        spawnCount: 1, // Reduced (was 2)
         bossSpawnTime: 50,
         enableSwarms: true,
         description: [
@@ -207,17 +209,35 @@ const LevelConfig = {
             { type: 'teleporter', weight: 6 },
             { type: 'shielded', weight: 6 }
         ],
-        spawnInterval: 0.7,
+        spawnInterval: 0.84, // Nerfed 20% (was 0.7)
         spawnCount: 2,
         enableCloseSpawns: false,
         enableSwarms: true,
         finalRush: true,
-        bossSpawnTime: 50,
+        bossSpawnTime: 999, // No boss in level 10
         description: [
             'EVERY zombie type simultaneously',
             'Swarm waves of mixed zombies',
             'Final 30 seconds: spawn rate increases',
-            'Boss: The Omega Zombie - ALL abilities combined'
+            'Survive to reach the FINAL BOSS arena!'
+        ]
+    },
+
+    // Level 11: The Final Stand - Boss Arena
+    11: {
+        name: 'The Final Stand',
+        theme: 'The ruins of civilization... one last nightmare awaits',
+        zombieTypes: [
+            { type: 'walker', weight: 100 }
+        ],
+        spawnInterval: 999, // No regular spawns - boss only
+        bossSpawnTime: 3, // Boss spawns after 3 seconds
+        isFinalBoss: true,
+        description: [
+            'You have been teleported to the ruins...',
+            'An ancient evil stirs among the rubble',
+            'FINAL BOSS: The Destroyer',
+            'Beware its devastating projectiles!'
         ]
     }
 };
@@ -243,13 +263,13 @@ class LevelManager {
     }
 
     setLevel(level) {
-        this.currentLevel = Utils.clamp(level, 1, 10);
+        this.currentLevel = Utils.clamp(level, 1, 11);
         this.reset();
     }
 
     unlockNextLevel() {
         if (this.currentLevel >= this.maxUnlockedLevel) {
-            this.maxUnlockedLevel = Math.min(this.currentLevel + 1, 10);
+            this.maxUnlockedLevel = Math.min(this.currentLevel + 1, 11);
         }
     }
 
@@ -402,11 +422,15 @@ class LevelManager {
     }
 
     isLastLevel() {
-        return this.currentLevel === 10;
+        return this.currentLevel === 11;
+    }
+
+    isFinalBossLevel() {
+        return this.currentLevel === 11;
     }
 
     nextLevel() {
-        if (this.currentLevel < 10) {
+        if (this.currentLevel < 11) {
             this.currentLevel++;
             this.reset();
             return true;

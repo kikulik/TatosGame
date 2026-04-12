@@ -395,7 +395,9 @@ class UIManager {
     updateLevelButtons(maxUnlocked) {
         const buttons = this.elements.levelButtons.querySelectorAll('.level-btn');
         buttons.forEach((btn, index) => {
-            if (index + 1 <= maxUnlocked) {
+            // Level 11 is the final boss arena - not selectable from menu
+            const level = index + 1;
+            if (level <= 10 && level <= maxUnlocked) {
                 btn.classList.add('unlocked');
             } else {
                 btn.classList.remove('unlocked');
@@ -510,10 +512,15 @@ class UIManager {
         this.showScreen('gameOver');
     }
 
-    showLevelComplete(kills, score, bestCombo) {
+    showLevelComplete(kills, score, bestCombo, isFinalBoss = false) {
         this.elements.lcKills.textContent = kills;
         this.elements.lcScore.textContent = score;
         this.elements.lcCombo.textContent = `x${bestCombo}`;
+
+        // Update button text for final boss
+        if (this.buttons.nextLevel) {
+            this.buttons.nextLevel.textContent = isFinalBoss ? 'CLAIM VICTORY' : 'NEXT LEVEL';
+        }
 
         this.showScreen('levelComplete');
     }

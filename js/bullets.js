@@ -57,7 +57,9 @@ class Bullet {
         this.vx = Math.cos(angle) * this.speed;
         this.vy = Math.sin(angle) * this.speed;
         this.active = true;
-        this.damage = weapon.damage;
+        this.damage = weapon.randomDamage
+            ? Utils.random(weapon.minDamage, weapon.maxDamage)
+            : weapon.damage;
         this.radius = weapon.bulletSize;
         this.color = weapon.color;
         this.trailColor = weapon.trailColor;

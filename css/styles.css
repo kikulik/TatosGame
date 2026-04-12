@@ -232,7 +232,7 @@ body {
 /* Boss Health Bar */
 #boss-health-container {
     position: absolute;
-    bottom: 100px;
+    top: 60px;
     left: 50%;
     transform: translateX(-50%);
     width: 500px;
