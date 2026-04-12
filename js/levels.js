@@ -84,8 +84,7 @@ const LevelConfig = {
             { type: 'car', weight: 12 },
             { type: 'jumper', weight: 23 }
         ],
-        spawnInterval: 1.1, // Harder (was 1.5)
-        spawnCount: 2,
+        spawnInterval: 1.275, // 15% harder than original (was 1.5)
         bossSpawnTime: 50,
         description: [
             'Mixed ground zombies (50%)',
@@ -107,8 +106,7 @@ const LevelConfig = {
             { type: 'helicopter', weight: 23 },
             { type: 'diveBomber', weight: 20 }
         ],
-        spawnInterval: 0.9, // Harder (was 1.3)
-        spawnCount: 2,
+        spawnInterval: 1.04, // 20% harder than original (was 1.3)
         bossSpawnTime: 50,
         description: [
             'Mixed ground zombies (40%)',
@@ -131,8 +129,8 @@ const LevelConfig = {
             { type: 'jumper', weight: 15 },
             { type: 'diveBomber', weight: 15 }
         ],
-        spawnInterval: 1.2, // Easier (was 0.6)
-        spawnCount: 1, // Reduced (was 2)
+        spawnInterval: 0.63, // 5% easier than original (was 0.6)
+        spawnCount: 2,
         bossSpawnTime: 50,
         enableSwarms: true,
         description: [
